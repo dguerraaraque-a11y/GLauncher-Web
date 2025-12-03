@@ -303,10 +303,10 @@
         <a href="dashboard.html"><i class="fas fa-user-circle"></i><span>Perfil</span></a>
     </nav>
 
-    <!-- Librería de Socket.IO para el chat en vivo -->
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <!-- Librería de Pusher para el chat en vivo -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script src="js/global-script.js"></script>
-    <!-- <script src="static/js/radio-script.js"></script> --> <!-- Script anterior deshabilitado -->
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const tabButtons = document.querySelectorAll('.prog-tab-button');
@@ -377,10 +377,21 @@
             const emojiButton = document.getElementById('emoji-btn');
             const pickerContainer = document.getElementById('picker-container');
             const notificationSound = document.getElementById('chat-notification-sound');
+            let lastTimestamp = new Date(0).toISOString();
 
-            // Conexión al servidor de WebSockets
-            const socket = io("https://glauncher-backend.onrender.com"); // <-- ¡TU URL DE RENDER AQUÍ!
+            // --- CONFIGURACIÓN DE PUSHER ---
+            // Estas claves son públicas y seguras de exponer en el frontend.
+            const PUSHER_KEY = 'default_key'; // Reemplaza con tu PUSHER_KEY real si no usas variables de entorno aquí
+            const PUSHER_CLUSTER = 'us2';     // Reemplaza con tu PUSHER_CLUSTER real
 
+            const pusher = new Pusher(PUSHER_KEY, {
+                cluster: PUSHER_CLUSTER
+            });
+
+            // Suscribirse al canal del chat
+            const channel = pusher.subscribe('chat_radio');
+
+            // --- LÓGICA DEL CHAT ---
             const USERNAME_KEY = 'glauncher_chat_username';
 
             // Lista de palabras para el filtro de profanidad
@@ -429,29 +440,49 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
 
-            function saveAndSendMessage(content, type = 'text') {
+            async function saveAndSendMessage(content, type = 'text') {
                 let username = usernameInput.value.trim();
                 if (!username) {
                     username = 'Anónimo';
                 }
                 localStorage.setItem(USERNAME_KEY, username);
-                
+
                 let finalContent = content;
                 if (type === 'text') {
                     finalContent = filterProfanity(content);
                 }
 
-                const newMessage = { username, content: finalContent, type, timestamp: new Date().toISOString() };
+                const newMessage = { username, content: finalContent, type };
 
-                // Enviar el mensaje al servidor a través de WebSockets
-                socket.emit('send_message', newMessage);
+                try {
+                    const response = await fetch('/api/chat_messages/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newMessage),
+                        credentials: 'include'
+                    });
 
-                if (type === 'text') messageInput.value = '';
-                toggleSendButton();
+                    if (!response.ok) {
+                        console.error('Error al enviar el mensaje');
+                        // Opcional: mostrar un error al usuario
+                    } else {
+                        // El mensaje se envió correctamente. Pusher se encargará de mostrarlo.
+                        if (type === 'text') messageInput.value = '';
+                        toggleSendButton();
+                    }
+                } catch (error) {
+                    console.error('Error de red al enviar el mensaje:', error);
+                }
             }
 
-            // Escuchar por mensajes entrantes del servidor
-            socket.on('receive_message', (msg) => {
+            // Escuchar por el evento 'new_message' desde Pusher
+            channel.bind('new_message', function(msg) {
+                // Comprobar si el mensaje ya se mostró (evita duplicados si el fetch y pusher llegan casi al mismo tiempo)
+                if (new Date(msg.timestamp) > new Date(lastTimestamp)) {
+                    addMessageToDOM(msg);
+                    lastTimestamp = msg.timestamp;
+                }
+
                 addMessageToDOM(msg);
                 // Reproducir sonido solo si el mensaje no es nuestro (opcional)
                 if (notificationSound && msg.username !== usernameInput.value.trim()) {
@@ -460,6 +491,25 @@
                     notificationSound.play().catch(e => console.warn("No se pudo reproducir sonido de notificación"));
                 }
             });
+
+            // Función para cargar mensajes iniciales
+            async function fetchInitialMessages() {
+                try {
+                    const response = await fetch('/api/chat_messages');
+                    const messages = await response.json();
+                    chatMessages.innerHTML = ''; // Limpiar mensajes de ejemplo
+                    messages.forEach(msg => {
+                        addMessageToDOM(msg);
+                    });
+                    if (messages.length > 0) {
+                        lastTimestamp = messages[messages.length - 1].timestamp;
+                    }
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (error) {
+                    console.error("Error al cargar los mensajes iniciales:", error);
+                    chatMessages.innerHTML = '<div class="chat-message system"><p>Error al cargar el chat. Inténtalo de nuevo más tarde.</p></div>';
+                }
+            }
 
             function toggleSendButton() {
                 sendButton.disabled = messageInput.value.trim() === '';
@@ -477,7 +527,6 @@
             // Deshabilitar el botón de enviar si el input está vacío
             messageInput.addEventListener('input', toggleSendButton);
             toggleSendButton(); // Estado inicial
-
 
             // --- Lógica del Panel de Emojis ---
             const TENOR_API_KEY = "LIVDSRZULELA"; // Clave de API de Tenor v1
@@ -572,7 +621,7 @@
                         img.src = gif.media[0].tinygif.url; // Ajustado para la estructura de la API v1
                         img.alt = gif.content_description;
                         img.addEventListener('click', () => {
-                            sendNewMessage(gif.media[0].gif.url, 'gif'); // Ajustado para la estructura de la API v1
+                            saveAndSendMessage(gif.media[0].gif.url, 'gif'); // Usar la nueva función
                             pickerContainer.classList.remove('show');
                         });
                         gifResultsContainer.appendChild(img);
@@ -598,7 +647,8 @@
                 }
             });
 
-            // No se cargan mensajes locales, el chat empieza vacío y recibe mensajes en vivo.
+            // Cargar mensajes iniciales al entrar a la página
+            fetchInitialMessages();
         });
     </script>
     <audio id="chat-notification-sound" src="sounds/chat_notification.mp3" preload="auto"></audio>

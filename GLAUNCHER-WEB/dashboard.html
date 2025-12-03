@@ -50,8 +50,8 @@
                 <nav class="dashboard-nav desktop-nav">
                     <a href="#" class="nav-item active" data-target="launcher-section"><i class="fas fa-rocket"></i> Lanzador</a>
                     <a href="#" class="nav-item" data-target="stats-section"><i class="fas fa-chart-line"></i> Estadísticas</a>
-                    <!-- Botón de Admin (ahora visible para todos) -->
-                    <a href="html/admin.html" id="admin-nav-button" class="nav-item"><i class="fas fa-user-shield"></i> Admin</a>
+                    <!-- El script de dashboard-script.js se encargará de mostrar/ocultar esto -->
+                    <a href="/admin" id="admin-nav-button" class="nav-item" style="display: none;"><i class="fas fa-user-shield"></i> Admin</a>
                     <a href="#" class="nav-item" data-target="settings-section"><i class="fas fa-cogs"></i> Configuraciones</a>
                 </nav>
             </aside>
@@ -125,8 +125,8 @@
     <nav class="bottom-nav mobile-nav">
         <a href="#" class="nav-item active" data-target="launcher-section"><i class="fas fa-rocket"></i><span>Lanzador</span></a>
         <a href="#" class="nav-item" data-target="stats-section"><i class="fas fa-chart-line"></i><span>Estadísticas</span></a>
-        <!-- Botón de Admin para móvil (ahora visible para todos) -->
-        <a href="html/admin.html" id="admin-nav-button-mobile" class="nav-item"><i class="fas fa-user-shield"></i><span>Admin</span></a>
+        <!-- El script también gestionará este botón -->
+        <a href="/admin" id="admin-nav-button-mobile" class="nav-item" style="display: none;"><i class="fas fa-user-shield"></i><span>Admin</span></a>
         <a href="#" class="nav-item" data-target="settings-section"><i class="fas fa-cogs"></i><span>Ajustes</span></a>
         <button id="logout-btn" class="nav-item logout"><i class="fas fa-sign-out-alt"></i><span>Salir</span></button> <!-- El JS manejará el logout -->
     </nav>

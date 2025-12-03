@@ -205,5 +205,19 @@ document.addEventListener('DOMContentLoaded', () => {
         createSnowflakes();
         animateSnow();
         window.addEventListener('resize', () => { resizeCanvas(); createSnowflakes(); });
+
+        // Lógica para el botón de activar/desactivar
+        toggleSnowBtn.addEventListener('click', () => {
+            snowEnabled = !snowEnabled;
+            toggleSnowBtn.classList.toggle('active', snowEnabled);
+            if (snowEnabled) {
+                // Si se activa, reinicia la animación
+                animateSnow();
+            } else {
+                // Si se desactiva, detiene el bucle de animación y limpia el canvas
+                cancelAnimationFrame(animationFrameId);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        });
     }
 });

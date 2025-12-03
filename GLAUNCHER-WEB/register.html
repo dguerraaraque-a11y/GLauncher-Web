@@ -116,9 +116,6 @@
             const registerForm = document.getElementById('register-form');
             const messageBox = document.getElementById('form-message-box');
 
-            // URL del backend. Para desarrollo local, apunta a tu propia PC.
-            const BACKEND_URL = "http://127.0.0.1:5000";
-
             function showMessage(message, isError = true) {
                 messageBox.textContent = message;
                 messageBox.className = 'form-message'; // Reset
@@ -148,7 +145,7 @@
                 delete data.confirm_password; // No necesitamos enviar esto al backend
 
                 try {
-                    const response = await fetch(`${BACKEND_URL}/register`, {
+                    const response = await fetch(`/register`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data),
