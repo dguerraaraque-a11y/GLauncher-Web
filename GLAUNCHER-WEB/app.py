@@ -5,8 +5,9 @@ import bcrypt
 from datetime import datetime
 
 # Inicializa la aplicación Flask, especificando que los archivos estáticos (CSS, JS, imágenes)
-# se encuentran en la carpeta 'static' y las plantillas en 'templates'.
-app = Flask(__name__, static_folder='../static', static_url_path='/static', template_folder='..') # Ruta estática explícita para Vercel
+# se encuentran en el directorio raíz y las plantillas también.
+# Esto es clave para que Vercel encuentre los archivos con la estructura actual.
+app = Flask(__name__, static_folder='.', static_url_path='', template_folder='.')
 oauth = OAuth(app)
 
 # Clave secreta para manejar sesiones de forma segura. ¡Cámbiala por algo aleatorio y secreto!
@@ -166,7 +167,7 @@ def dashboard():
     # Proteger la ruta: si el usuario no está logueado, lo redirige al login.
     if 'logged_in' in session and session['logged_in']:
         # Pasa el nombre de usuario a la plantilla del dashboard
-        return render_template('dashboard.html', username=session.get('username'))
+        return render_template('dashboard.html')
     else:
         # Si no está logueado, lo mandamos a la página de login
         return redirect(url_for('login'))
@@ -176,6 +177,7 @@ def logout():
     """Ruta para cerrar la sesión del usuario."""
     # Elimina los datos de la sesión
     session.pop('logged_in', None)
+    session.pop('username_for_2fa', None)
     session.pop('username', None)
     # Redirige a la página de inicio
     return redirect(url_for('index'))
@@ -239,7 +241,7 @@ def user_info():
             # Aquí puedes añadir más datos si los necesitas, como el avatar, etc.
             return jsonify({
                 'username': user.username, 
-                'is_admin': False, # 'is_admin' es un placeholder
+                'is_admin': False, # TODO: Implementar lógica de roles si es necesario
                 'avatar_url': user.avatar_url
             })
     
