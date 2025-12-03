@@ -1,14 +1,12 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
-from flask_socketio import SocketIO, emit
 import bcrypt
+from datetime import datetime
 
 # Inicializa la aplicación Flask, especificando que los archivos estáticos (CSS, JS, imágenes)
 # se encuentran en la carpeta 'static' y las plantillas en 'templates'.
-app = Flask(__name__, static_folder='static', static_url_path='/static')
-# Configuración de SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*")
+app = Flask(__name__, static_folder='../static', static_url_path='/static', template_folder='..') # Ruta estática explícita para Vercel
 oauth = OAuth(app)
 
 # Clave secreta para manejar sesiones de forma segura. ¡Cámbiala por algo aleatorio y secreto!
@@ -33,6 +31,17 @@ class User(db.Model):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+class ChatMessage(db.Model):
+    """Modelo para los mensajes del chat de la radio."""
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), nullable=False)
+    content = db.Column(db.String(500), nullable=False)
+    message_type = db.Column(db.String(10), nullable=False, default='text') # 'text' o 'gif'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {'id': self.id, 'username': self.username, 'content': self.content, 'type': self.message_type, 'timestamp': self.timestamp.isoformat()}
 
 # --- Configuración de OAuth 2.0 ---
 
@@ -237,6 +246,49 @@ def user_info():
     # Si no está logueado o no se encuentra, devuelve un error 401
     return jsonify({'error': 'No autenticado'}), 401
 
+@app.route('/api/chat_messages')
+def get_chat_messages():
+    """Endpoint para obtener los últimos mensajes del chat."""
+    # Obtener el timestamp del último mensaje conocido por el cliente
+    since_timestamp_str = request.args.get('since')
+    
+    query = ChatMessage.query
+    
+    if since_timestamp_str:
+        # Si se proporciona un timestamp, buscar mensajes más nuevos que ese
+        try:
+            # Asegurarse de que el timestamp del cliente se maneje correctamente
+            since_timestamp = datetime.fromisoformat(since_timestamp_str.replace('Z', '+00:00'))
+            query = query.filter(ChatMessage.timestamp > since_timestamp)
+        except ValueError:
+            # Si el formato del timestamp es inválido, devolver un error
+            return jsonify({"error": "Formato de fecha inválido"}), 400
+    else:
+        # Si no se proporciona, obtener los últimos 50 mensajes
+        query = query.order_by(ChatMessage.timestamp.desc()).limit(50)
+
+    # Ordenar siempre por fecha ascendente para mostrarlos en orden
+    messages = query.order_by(ChatMessage.timestamp.asc()).all()
+    
+    return jsonify([msg.to_dict() for msg in messages])
+
+@app.route('/api/chat_messages/create', methods=['POST'])
+def create_chat_message():
+    """Endpoint para crear un nuevo mensaje en el chat."""
+    data = request.get_json()
+    if not data or not data.get('content'):
+        return jsonify({'error': 'El contenido no puede estar vacío'}), 400
+
+    new_message = ChatMessage(
+        username=data.get('username', 'Anónimo'),
+        content=data.get('content'),
+        message_type=data.get('type', 'text')
+    )
+    db.session.add(new_message)
+    db.session.commit()
+
+    return jsonify(new_message.to_dict()), 201
+
 # --- Rutas para OAuth ---
 
 @app.route('/login/google')
@@ -314,31 +366,9 @@ def auth_microsoft():
     session['username'] = user.username
     return redirect(url_for('dashboard'))
 
-# --- Lógica del Chat con WebSockets ---
-
-@socketio.on('connect')
-def handle_connect():
-    """Se ejecuta cuando un usuario se conecta al chat."""
-    print('Cliente conectado al chat')
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Se ejecuta cuando un usuario se desconecta."""
-    print('Cliente desconectado del chat')
-
-@socketio.on('send_message')
-def handle_send_message(data):
-    """Recibe un mensaje de un cliente y lo retransmite a todos los demás."""
-    # Aquí puedes añadir lógica para guardar el mensaje en la base de datos si quieres
-    # `broadcast=True` asegura que el mensaje se envía a todos los clientes conectados.
-    emit('receive_message', data, broadcast=True)
-
 
 # Ejecutar la aplicación
 if __name__ == '__main__':
-    # Usar app.app_context() asegura que la aplicación esté configurada
-    # antes de intentar interactuar con la base de datos.
     with app.app_context():
         db.create_all()  # Crea las tablas si no existen.
-    # Usamos socketio.run() en lugar de app.run() para habilitar WebSockets
-    socketio.run(app, debug=True, port=5000)
+    app.run(debug=True, port=5000)

@@ -75,8 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function triggerAnimation(element) {
-            element.parentElement.classList.add('time-flash');
-            setTimeout(() => element.parentElement.classList.remove('time-flash'), 200);
+            element.parentElement.classList.add('time-bounce');
+            setTimeout(() => element.parentElement.classList.remove('time-bounce'), 400); // Coincide con la duración de la animación
         }
 
         // Función para la animación de confeti
@@ -150,8 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSnowBtn.classList.add('active');
 
         function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            const section = document.getElementById('christmas-countdown-section');
+            if (section) {
+                canvas.width = section.offsetWidth;
+                canvas.height = section.offsetHeight;
+            }
         }
 
         function createSnowflakes() {
@@ -162,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
                     radius: Math.random() * 3 + 1, // Radio entre 1 y 4
-                    density: Math.random() * count,
                     speed: Math.random() * 1 + 0.5 // Velocidad de caída
                 });
             }
@@ -185,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 0; i < snowflakes.length; i++) {
                 const s = snowflakes[i];
                 s.y += s.speed;
-                // Si el copo sale por abajo, lo reinicia arriba
                 if (s.y > canvas.height) {
                     snowflakes[i] = { ...s, x: Math.random() * canvas.width, y: -10 };
                 }
@@ -199,30 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function startSnowing() {
-            snowEnabled = true;
-            toggleSnowBtn.classList.add('active');
-            animateSnow();
-        }
-
-        function stopSnowing() {
-            snowEnabled = false;
-            toggleSnowBtn.classList.remove('active');
-            cancelAnimationFrame(animationFrameId);
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar el canvas
-        }
-
-        toggleSnowBtn.addEventListener('click', () => {
-            snowEnabled ? stopSnowing() : startSnowing();
-        });
-
-        // Iniciar la nieve por defecto
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            createSnowflakes();
-        });
+        // Iniciar la nieve
         resizeCanvas();
         createSnowflakes();
-        startSnowing();
+        animateSnow();
+        window.addEventListener('resize', () => { resizeCanvas(); createSnowflakes(); });
     }
 });
