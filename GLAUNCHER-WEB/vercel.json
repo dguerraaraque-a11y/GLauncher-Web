@@ -9,8 +9,13 @@
     ],
     "routes": [
         {
-            "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|ico|svg|mp3|woff|woff2|ttf))",
-            "dest": "/$1"
+            "src": "/css/(.*)", "dest": "/css/$1"
+        },
+        {
+            "src": "/js/(.*)", "dest": "/js/$1"
+        },
+        {
+            "src": "/images/(.*)", "dest": "/images/$1"
         },
         {
             "src": "/(.*)",

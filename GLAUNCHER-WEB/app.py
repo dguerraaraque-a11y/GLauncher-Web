@@ -23,10 +23,9 @@ pusher_client = pusher.Pusher(
 )
 
 # Inicializa la aplicación Flask.
-# - `template_folder='.'` para que encuentre los HTML en la raíz y en subcarpetas.
-# - `static_folder='static'` y `static_url_path='/static'` es la configuración estándar y robusta
-#   para servir archivos CSS, JS, imágenes, etc. desde una carpeta 'static'.
-app = Flask(__name__, template_folder='.', static_folder='static', static_url_path='/static')
+# Configuración para que Vercel encuentre todos los archivos (HTML, CSS, JS)
+# desde el directorio raíz, sin una carpeta 'static' dedicada.
+app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
 oauth = OAuth(app)
 
 # Clave secreta: Usa la variable de entorno 'SECRET_KEY' en Vercel.
