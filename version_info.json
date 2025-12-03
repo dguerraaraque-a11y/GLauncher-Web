@@ -1,0 +1,15 @@
+{
+  "latest_version": "1.0.0",
+  "release_date": "2025-10-20",
+  "is_critical": false,
+  "changelog_url": "/noticias#v1.0.0",
+  "download_urls": {
+    "windows_x64": "/download/glauncher-1.0.0-setup-x64.exe",
+    "windows_x86": "/download/glauncher-1.0.0-setup-x86.exe",
+    "macos": null,
+    "linux": null,
+    "android": null,
+    "ios": null
+  },
+  "release_notes": "Esta versión incluye el nuevo motor de rendimiento y soporte para Minecraft 1.8.9 y 1.16.5. ¡Máxima estabilidad y FPS!"
+}
