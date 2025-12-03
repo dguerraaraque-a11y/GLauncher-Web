@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GLauncher - Iniciar Sesión</title>
     <link rel="stylesheet" href="css/styles.css"> 
-    <link rel="icon" type="image/png" href="images/GLauncher logo.png">
+    <link rel="icon" type="image/png" href="images/glauncher logo.png">
     <link rel="stylesheet" href="css/login-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
 
     <header class="header">
         <div class="logo-container">
-            <img src="images/GLauncher logo.png" alt="Logo de GLauncher" class="logo">
+            <img src="images/glauncher logo.png" alt="Logo de GLauncher" class="logo">
             <h1>GLauncher</h1>
         </div>
         <nav class="auth-buttons">
@@ -34,7 +34,7 @@
         <div class="auth-page-wrapper">
             <!-- Panel de Información Izquierdo -->
             <div class="auth-info-panel">
-                <img src="images/GLauncher logo.png" alt="Logo GLauncher" class="info-panel-logo">
+                <img src="images/glauncher logo.png" alt="Logo GLauncher" class="info-panel-logo">
                 <h2 class="info-panel-title">Bienvenido de Nuevo</h2>
                 <p class="info-panel-description">
                     Inicia sesión para acceder a un rendimiento optimizado, gestión de mods y todas las herramientas que GLauncher tiene para ti.
@@ -116,119 +116,7 @@
     </nav>
 
     <script src="js/global-script.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginForm = document.getElementById('login-form');
-            const credentialsSection = document.getElementById('credentials-section');
-            const codeEntrySection = document.getElementById('code-entry-section');
-            const verifyCodeButton = document.getElementById('verify-code-button');
-            const goBackLink = document.getElementById('go-back-login');
-            const messageBox = document.getElementById('form-message-box');
-
-            function showMessage(message, isError = true) {
-                messageBox.textContent = message;
-                messageBox.className = 'form-message'; // Reset classes
-                messageBox.classList.add(isError ? 'error' : 'success');
-                messageBox.style.display = 'block';
-            }
-            
-            // Mostrar mensaje si se redirige desde el panel de admin
-            const urlParams = new URLSearchParams(window.location.search);
-            const reason = urlParams.get('reason');
-            if (reason === 'login_required') {
-                showMessage('Debes iniciar sesión para acceder al panel de administración.', false);
-            } else if (reason === 'admin_required') {
-                showMessage('Acceso denegado. Necesitas permisos de administrador.', true);
-            }
-
-            // Función para verificar si ya hay una sesión activa
-            async function checkSession() {
-                try {
-                    const response = await fetch(`/api/user_info`, {
-                        credentials: 'include'
-                    });
-                    if (response.ok) {
-                        // Si la respuesta es OK, significa que el usuario ya está logueado.
-                        // Lo redirigimos al dashboard.
-                        window.location.href = "/dashboard";
-                    }
-                    // Si la respuesta no es OK (ej. 401), no hacemos nada y dejamos que el usuario inicie sesión.
-                } catch (error) {
-                    // Error de red, no hacemos nada y permitimos el inicio de sesión manual.
-                    console.warn("No se pudo verificar la sesión existente, puede que el servidor no esté en línea.", error);
-                }
-            }
-
-            // 1. Enviar credenciales al backend
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                messageBox.style.display = 'none';
-
-                const formData = new FormData(loginForm);
-                // Creamos el objeto de datos manualmente para enviar solo lo necesario.
-                const data = {
-                    username: formData.get('username'),
-                    password: formData.get('password')
-                };
-
-                try {
-                    const response = await fetch(`/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data),
-                        credentials: 'include' // Importante para manejar sesiones/cookies
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        credentialsSection.style.display = 'none';
-                        codeEntrySection.style.display = 'block';
-                    } else {
-                        showMessage(result.message || 'Error desconocido.');
-                    }
-                } catch (error) {
-                    showMessage('Error de conexión con el servidor.');
-                }
-            });
-
-            // 2. Enviar código 2FA al backend
-            verifyCodeButton.addEventListener('click', async () => {
-                const code = document.getElementById('security-code').value;
-                messageBox.style.display = 'none';
-
-                try {
-                    const response = await fetch(`/verify-code`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code: code }),
-                        credentials: 'include' // CRUCIAL para que el servidor sepa qué sesión verificar
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        // Redirigir a la URL que nos da el backend
-                        window.location.href = result.redirect_url;
-                    } else {
-                        showMessage(result.message || 'Error desconocido.');
-                    }
-                } catch (error) {
-                    showMessage('Error de conexión con el servidor.');
-                }
-            });
-
-            // 3. Volver a la pantalla de credenciales
-            goBackLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                codeEntrySection.style.display = 'none';
-                credentialsSection.style.display = 'block';
-                messageBox.style.display = 'none';
-            });
-
-            // Al cargar la página, primero verificamos si ya hay una sesión.
-            checkSession();
-        });
-    </script>
+    <!-- Script específico para la página de login -->
+    <script src="js/login-script.js"></script>
 </body>
 </html>

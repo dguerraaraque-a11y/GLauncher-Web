@@ -11,137 +11,6 @@
 </head>
 <!-- Librería para la animación de confeti -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<style>
-    /* Estilos NEÓN para el contador de Navidad */
-    #christmas-countdown {
-        background: var(--secondary-bg-color);
-        color: white;
-        padding: 2em;
-        border-radius: 15px; /* Esquinas redondeadas */
-        text-align: center;
-        border: 2px solid var(--neon-blue);
-        box-shadow: 0 0 20px var(--neon-pink), inset 0 0 10px rgba(255, 82, 197, 0.3);
-        margin: 2em auto; /* Lo centramos de nuevo */
-        max-width: 800px;
-    }
-
-    #christmas-countdown h3 {
-        margin-top: 0;
-        font-size: 2em; margin-bottom: 15px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: var(--neon-blue);
-        text-shadow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-pink);
-    }
-
-    #christmas-countdown .countdown-target-date {
-        font-size: 1.2em;
-        color: var(--text-color-dark);
-        margin-top: -20px;
-        margin-bottom: 30px;
-        text-shadow: 0 0 5px rgba(255,255,255,0.1);
-    }
-
-    #timer {
-        display: flex;
-        justify-content: center;
-        gap: 1.5em;
-        margin-top: 1.5em;
-        flex-wrap: wrap;
-    }
-
-    #timer div {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 82, 197, 0.3);
-        padding: 1em;
-        border-radius: 10px;
-        min-width: 100px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        font-size: 1.1em;
-        font-weight: 300;
-        color: var(--text-color-dark);
-    }
-
-    #timer div span {
-        font-size: 3em;
-        font-weight: bold;
-        line-height: 1;
-        color: var(--neon-green);
-        text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
-        transition: all 0.2s ease-in-out;
-    }
-
-    /* Animación de 'flash' para cuando un número cambia */
-    .time-flash {
-        transform: scale(1.15);
-        color: #fff !important;
-        text-shadow: 0 0 15px #fff, 0 0 25px var(--neon-green);
-    }
-
-    /* Estilo para el mensaje final de Feliz Navidad */
-    .christmas-greeting {
-        font-size: 2.5em;
-        font-weight: bold;
-        color: #fff;
-        text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-pink), 0 0 35px var(--neon-pink);
-        animation: greeting-pulse 2s infinite;
-    }
-
-    @keyframes greeting-pulse {
-        50% { text-shadow: 0 0 15px #fff, 0 0 30px var(--neon-pink), 0 0 50px var(--neon-pink); }
-    }
-
-    /* --- Estilos para el efecto de nieve --- */
-    #snow-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none; /* Para que no interfiera con los clics */
-        overflow: hidden;
-        z-index: 10;
-    }
-
-    .snowflake {
-        position: absolute;
-        background: white;
-        border-radius: 50%;
-        opacity: 0.8;
-        box-shadow: 0 0 5px #fff, 0 0 10px #fff;
-        animation: fall linear infinite;
-    }
-
-    @keyframes fall {
-        to {
-            transform: translateY(100vh);
-            opacity: 0;
-        }
-    }
-
-    #snow-pile {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: 0;
-        background: linear-gradient(to top, rgba(255,255,255,0.7), rgba(255,255,255,0));
-        transition: height 1s linear;
-    }
-
-    #broom {
-        position: absolute;
-        bottom: -20px;
-        left: -150px; /* Inicia fuera de la pantalla */
-        font-size: 100px;
-        color: #a5682a;
-        transform: rotate(-30deg);
-        transition: left 2s ease-in-out;
-        z-index: 20;
-    }
-</style>
 <body>
 
     <header class="header">
@@ -198,7 +67,7 @@
                 </div>
 
                 <div class="launcher-visual-right">
-                    <img src="images/GLauncher logo.png" alt="Logo de GLauncher" class="launcher-gui-img">
+                    <img src="images/glauncher logo.png" alt="Logo de GLauncher" class="launcher-gui-img">
                 </div>
             </div>
         </section>
