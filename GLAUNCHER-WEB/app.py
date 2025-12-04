@@ -9,12 +9,11 @@ import pusher # Librería para la solución del chat
 
 # --- INICIALIZACIÓN Y CONFIGURACIÓN CRÍTICA PARA VERCEL ---
 
-# 1. Base de Datos Remota (PostgreSQL/MySQL) - Usar variable de entorno
-# Si no está configurada, usa SQLite temporalmente para compatibilidad local.
+# 1. Base de Datos (USAR VARIABLE DE ENTORNO DATABASE_URL)
+# Vercel necesita una DB remota (PostgreSQL).
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///glauncher.db')
 
-# 2. Configuración de Pusher (Solución al chat/WebSockets)
-# Estas claves DEBEN configurarse como VARIABLES DE ENTORNO en Vercel.
+# 2. Configuración de Pusher (Claves DEBEN configurarse en Vercel)
 pusher_client = pusher.Pusher(
     app_id=os.environ.get('PUSHER_APP_ID', '1234567'),  
     key=os.environ.get('PUSHER_KEY', 'default_key'),    
@@ -23,12 +22,11 @@ pusher_client = pusher.Pusher(
     ssl=True
 )
 
-# Inicializa la aplicación Flask
-# La inicialización simple permite que las rutas personalizadas de estáticos (abajo) tomen el control.
+# Inicialización de Flask: configuración simple para Serverless
 app = Flask(__name__) 
 oauth = OAuth(app)
 
-# Clave secreta: ¡Usar variable de entorno! (Si no está definida, usa una generada aleatoriamente)
+# Clave secreta (¡Usar variable de entorno SECRET_KEY!)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -49,17 +47,17 @@ class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     content = db.Column(db.String(500), nullable=False)
-    message_type = db.Column(db.String(10), nullable=False, default='text')
+    message_type = db.Column(db.String(10), nullable=False, default='text') 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
         return {'id': self.id, 'username': self.username, 'content': self.content, 'type': self.message_type, 'timestamp': self.timestamp.isoformat()}
 
-# --- Configuración de OAuth 2.0 (Usa variables de entorno, con tus claves como fallback) ---
+# --- Configuración de OAuth 2.0 (Usando Variables de Entorno) ---
 oauth.register(
     name='google',
     client_id=os.environ.get('GOOGLE_CLIENT_ID', '71330665801-6joq0752g7hhhp2hmld06hrfg67rhji0.apps.googleusercontent.com'),
-    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', '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'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', 'GOCSPX-PbP6MmjFDHa3AhpRLF5dmP2atp-'),
     access_token_url='https://accounts.google.com/o/oauth2/token',
     access_token_params=None,
     authorize_url='https://accounts.google.com/o/oauth2/auth',
@@ -158,7 +156,7 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-# --- API para Noticias (sin cambios) ---
+# --- API para Noticias ---
 @app.route('/api/news')
 def get_news():
     news_data = [
@@ -167,7 +165,7 @@ def get_news():
             "date": "13 JUN 2024",
             "category": "juego",
             "summary": "¡La aventura te espera! Adéntrate en las Cámaras de Desafío, enfréntate a nuevos enemigos como el Breeze y el Bogged, y fabrica la poderosa Maza. Esta actualización está llena de retos y recompensas.",
-            "image": "static/noticias/TRICKY_TRIALS.jpg",
+            "image": "/images/TRICKY_TRIALS.jpg", # Usando ruta corregida
             "link": "https://es.minecraft.wiki/w/Tricky_Trials",
             "icon": "fa-dungeon",
             "buttonText": "Leer más"
@@ -177,7 +175,7 @@ def get_news():
             "date": "07 JUN 2023",
             "category": "juego",
             "summary": "La actualización 1.20 trajo la arqueología, los sniffers, camellos, y los hermosos biomas de cerezos. ¡Es hora de crear tus propias historias mientras exploras un mundo más vivo que nunca!",
-            "image": "static/noticias/Trails and Tales.jpg",
+            "image": "/images/Trails and Tales.jpg", # Usando ruta corregida
             "link": "https://minecraft.wiki/w/Trails_%26_Tales",
             "icon": "fa-map-signs",
             "buttonText": "Leer más"
@@ -187,7 +185,7 @@ def get_news():
             "date": "20 OCT 2025",
             "category": "oficial",
             "summary": "¡Ahora puedes escuchar la mejor música mientras juegas! Nos hemos asociado con la radio TropiRumba Stereo 89.7 FM. Accede directamente desde el botón \"Radio\" en el launcher.",
-            "image": "static/images/news/GLauncher_X_TropiRumba.png",
+            "image": "/images/GLauncher_X_TropiRumba.png", # Usando ruta corregida
             "link": "radio.html",
             "icon": "fa-broadcast-tower",
             "buttonText": "Escuchar Ahora"
@@ -236,16 +234,14 @@ def create_chat_message():
     )
     db.session.add(new_message)
     db.session.commit()
-    # LÓGICA DE PUSHER (Notifica a todos los clientes)
+    # LÓGICA DE PUSHER
     try:
         pusher_client.trigger('chat_radio', 'new_message', new_message.to_dict())
     except Exception as e:
-        # Se guarda en DB incluso si Pusher falla
         print(f"Error al enviar mensaje por Pusher: {e}") 
     return jsonify(new_message.to_dict()), 201
 
-# --- Rutas para OAuth (sin cambios) ---
-
+# --- Rutas para OAuth ---
 @app.route('/login/google')
 def login_google():
     redirect_uri = url_for('auth_google', _external=True)
@@ -298,11 +294,10 @@ def auth_microsoft():
     return redirect(url_for('dashboard'))
 
 # --------------------------------------------------------------------------------------
-# --- RUTAS PERSONALIZADAS PARA SERVIR ARCHIVOS ESTÁTICOS (SOLUCIÓN CSS/JS) ---
+# --- RUTAS PERSONALIZADAS PARA SERVIR ARCHIVOS ESTÁTICOS (SOLUCIÓN CSS/JS/IMAGENES) ---
 # --------------------------------------------------------------------------------------
-# Estas rutas usan send_from_directory para servir los archivos directamente desde sus carpetas
-# en la raíz del proyecto, resolviendo el problema del CSS/JS en Vercel.
 
+# Rutas dinámicas para servir carpetas enteras de activos.
 @app.route('/css/<path:filename>')
 def serve_css(filename):
     """Sirve archivos CSS desde la carpeta 'css'."""
@@ -323,18 +318,17 @@ def serve_sounds(filename):
     """Sirve archivos de sonido desde la carpeta 'sounds'."""
     return send_from_directory('sounds', filename)
     
-# Ruta general para archivos específicos en la raíz (ej: co-style-style.css o iconos)
+# Ruta para archivos estáticos específicos que se encuentran en la raíz (ej. co-style-style.css)
 @app.route('/<path:filename>')
 def serve_root_files(filename):
-    """Sirve archivos específicos que se encuentran en la raíz del proyecto."""
-    # Lista de archivos que están en la raíz y deben ser servidos:
+    """Sirve archivos estáticos que se encuentran directamente en la raíz del proyecto."""
     safe_files = ['co-style-style.css', 'favicon.ico', 'glauncher.ico', 'sitemap.xml', 'robots.txt']
     if filename in safe_files:
         return send_from_directory('.', filename)
     
-    # Si no es un archivo estático de la raíz, devuelve un 404 (las rutas de la app lo manejarán antes).
-    return '', 404
+    # Esto evita que una solicitud estática no válida sea tratada como una ruta de la aplicación.
+    return '', 404 
     
 # -------------------------------------------------------------
-# --- ¡IMPORTANTE! EL BLOQUE DE EJECUCIÓN LOCAL HA SIDO ELIMINADO ---
+# --- ¡BLOQUE DE EJECUCIÓN IF __NAME__ == '__MAIN__' ELIMINADO! ---
 # -------------------------------------------------------------
