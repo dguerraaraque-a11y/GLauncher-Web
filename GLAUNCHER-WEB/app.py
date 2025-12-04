@@ -7,13 +7,13 @@ import os
 import secrets 
 import pusher # Librería para la solución del chat
 
-# --- INICIALIZACIÓN Y CONFIGURACIÓN CRÍTICA PARA VERCEL ---
+# --- INICIALIZACIÓN DE LA APLICACIÓN ---
 
-# 1. Base de Datos (USAR VARIABLE DE ENTORNO DATABASE_URL)
-# Vercel necesita una DB remota (PostgreSQL).
+# Leer la DATABASE_URL de las variables de entorno de Vercel. 
+# Si no está en Vercel, intenta usar SQLite (que fallará, pero es el fallback local).
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///glauncher.db')
 
-# 2. Configuración de Pusher (Claves DEBEN configurarse en Vercel)
+# Configuración de Pusher (Claves leídas de Vercel)
 pusher_client = pusher.Pusher(
     app_id=os.environ.get('PUSHER_APP_ID', '1234567'),  
     key=os.environ.get('PUSHER_KEY', 'default_key'),    
@@ -26,14 +26,14 @@ pusher_client = pusher.Pusher(
 app = Flask(__name__) 
 oauth = OAuth(app)
 
-# Clave secreta (¡Usar variable de entorno SECRET_KEY!)
+# Claves y DB
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# --- Modelo de Base de Datos ---
+# --- MODELOS DE BASE DE DATOS ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -53,15 +53,15 @@ class ChatMessage(db.Model):
     def to_dict(self):
         return {'id': self.id, 'username': self.username, 'content': self.content, 'type': self.message_type, 'timestamp': self.timestamp.isoformat()}
 
-# --- Configuración de OAuth 2.0 (Usando Variables de Entorno) ---
+# --- CONFIGURACIÓN DE OAUTH 2.0 (Usando Variables de Entorno) ---
+# Se asume que GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_ID, y MICROSOFT_CLIENT_SECRET 
+# están definidos en las variables de entorno de Vercel.
 oauth.register(
     name='google',
     client_id=os.environ.get('GOOGLE_CLIENT_ID', '71330665801-6joq0752g7hhhp2hmld06hrfg67rhji0.apps.googleusercontent.com'),
     client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', 'GOCSPX-PbP6MmjFDHa3AhpRLF5dmP2atp-'),
     access_token_url='https://accounts.google.com/o/oauth2/token',
-    access_token_params=None,
     authorize_url='https://accounts.google.com/o/oauth2/auth',
-    authorize_params=None,
     api_base_url='https://www.googleapis.com/oauth2/v1/',
     userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',
     client_kwargs={'scope': 'openid email profile'},
@@ -78,7 +78,7 @@ oauth.register(
     client_kwargs={'scope': 'User.Read'},
 )
 
-# --- Definición de las Rutas de la Aplicación ---
+# --- RUTAS DE LA APLICACIÓN ---
 
 @app.route('/')
 def index():
@@ -165,7 +165,7 @@ def get_news():
             "date": "13 JUN 2024",
             "category": "juego",
             "summary": "¡La aventura te espera! Adéntrate en las Cámaras de Desafío, enfréntate a nuevos enemigos como el Breeze y el Bogged, y fabrica la poderosa Maza. Esta actualización está llena de retos y recompensas.",
-            "image": "/images/TRICKY_TRIALS.jpg", # Usando ruta corregida
+            "image": "/images/TRICKY_TRIALS.jpg", 
             "link": "https://es.minecraft.wiki/w/Tricky_Trials",
             "icon": "fa-dungeon",
             "buttonText": "Leer más"
@@ -175,7 +175,7 @@ def get_news():
             "date": "07 JUN 2023",
             "category": "juego",
             "summary": "La actualización 1.20 trajo la arqueología, los sniffers, camellos, y los hermosos biomas de cerezos. ¡Es hora de crear tus propias historias mientras exploras un mundo más vivo que nunca!",
-            "image": "/images/Trails and Tales.jpg", # Usando ruta corregida
+            "image": "/images/Trails and Tales.jpg", 
             "link": "https://minecraft.wiki/w/Trails_%26_Tales",
             "icon": "fa-map-signs",
             "buttonText": "Leer más"
@@ -185,7 +185,7 @@ def get_news():
             "date": "20 OCT 2025",
             "category": "oficial",
             "summary": "¡Ahora puedes escuchar la mejor música mientras juegas! Nos hemos asociado con la radio TropiRumba Stereo 89.7 FM. Accede directamente desde el botón \"Radio\" en el launcher.",
-            "image": "/images/GLauncher_X_TropiRumba.png", # Usando ruta corregida
+            "image": "/images/GLauncher_X_TropiRumba.png", 
             "link": "radio.html",
             "icon": "fa-broadcast-tower",
             "buttonText": "Escuchar Ahora"
@@ -193,7 +193,7 @@ def get_news():
     ]
     return jsonify(news_data)
 
-# --- APIs de Usuario y Chat (con lógica de Pusher) ---
+# --- APIs de Usuario y Chat ---
 @app.route('/api/user_info')
 def user_info():
     if 'logged_in' in session and session.get('logged_in'):
@@ -213,12 +213,16 @@ def get_chat_messages():
     if since_timestamp_str:
         try:
             from datetime import timezone
+            # Asume que el formato de fecha es correcto si viene del cliente
             since_timestamp = datetime.fromisoformat(since_timestamp_str.replace('Z', '+00:00'))
             query = query.filter(ChatMessage.timestamp > since_timestamp)
         except ValueError:
             return jsonify({"error": "Formato de fecha inválido"}), 400
     else:
+        # Si no hay 'since', obtiene los últimos 50 mensajes
         query = query.order_by(ChatMessage.timestamp.desc()).limit(50)
+    
+    # Asegura el orden ascendente para mostrar el chat correctamente
     messages = query.order_by(ChatMessage.timestamp.asc()).all()
     return jsonify([msg.to_dict() for msg in messages])
 
@@ -227,6 +231,7 @@ def create_chat_message():
     data = request.get_json()
     if not data or not data.get('content'):
         return jsonify({'error': 'El contenido no puede estar vacío'}), 400
+    
     new_message = ChatMessage(
         username=data.get('username', 'Anónimo'),
         content=data.get('content'),
@@ -234,14 +239,16 @@ def create_chat_message():
     )
     db.session.add(new_message)
     db.session.commit()
-    # LÓGICA DE PUSHER
+    
+    # LÓGICA DE PUSHER (Notifica a los clientes)
     try:
         pusher_client.trigger('chat_radio', 'new_message', new_message.to_dict())
     except Exception as e:
         print(f"Error al enviar mensaje por Pusher: {e}") 
+        
     return jsonify(new_message.to_dict()), 201
 
-# --- Rutas para OAuth ---
+# --- Rutas para OAuth (Google y Microsoft) ---
 @app.route('/login/google')
 def login_google():
     redirect_uri = url_for('auth_google', _external=True)
@@ -296,8 +303,7 @@ def auth_microsoft():
 # --------------------------------------------------------------------------------------
 # --- RUTAS PERSONALIZADAS PARA SERVIR ARCHIVOS ESTÁTICOS (SOLUCIÓN CSS/JS/IMAGENES) ---
 # --------------------------------------------------------------------------------------
-
-# Rutas dinámicas para servir carpetas enteras de activos.
+# Estas rutas mapean las URL como /css/style.css a la carpeta física 'css' en la raíz.
 @app.route('/css/<path:filename>')
 def serve_css(filename):
     """Sirve archivos CSS desde la carpeta 'css'."""
@@ -325,10 +331,8 @@ def serve_root_files(filename):
     safe_files = ['co-style-style.css', 'favicon.ico', 'glauncher.ico', 'sitemap.xml', 'robots.txt']
     if filename in safe_files:
         return send_from_directory('.', filename)
-    
-    # Esto evita que una solicitud estática no válida sea tratada como una ruta de la aplicación.
     return '', 404 
     
 # -------------------------------------------------------------
-# --- ¡BLOQUE DE EJECUCIÓN IF __NAME__ == '__MAIN__' ELIMINADO! ---
+# *** NOTA: El bloque de ejecución local ha sido ELIMINADO para compatibilidad con Vercel. ***
 # -------------------------------------------------------------

@@ -2,11 +2,6 @@ Flask
 Flask-SQLAlchemy
 Authlib
 bcrypt
-# Para variables de entorno y manejo de claves
-python-dotenv
-# Para conexión robusta a bases de datos remotas (PostgreSQL)
-psycopg2-binary
-# Para la solución de chat/WebSockets en Vercel
 pusher
-# Para el uso de la Base de Datos en Flask (si no está implícito en Flask-SQLAlchemy)
 gunicorn
+psycopg2-binary
