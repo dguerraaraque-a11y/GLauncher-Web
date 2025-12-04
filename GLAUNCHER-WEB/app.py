@@ -1,15 +1,16 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 import bcrypt
 from datetime import datetime
-import os
+import os 
 import secrets 
 import pusher # Librería para la solución del chat
 
-# --- CONFIGURACIÓN CRÍTICA PARA VERCEL ---
+# --- INICIALIZACIÓN Y CONFIGURACIÓN CRÍTICA PARA VERCEL ---
 
-# 1. Base de Datos Remota (PostgreSQL/MySQL)
+# 1. Base de Datos Remota (PostgreSQL/MySQL) - Usar variable de entorno
+# Si no está configurada, usa SQLite temporalmente para compatibilidad local.
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///glauncher.db')
 
 # 2. Configuración de Pusher (Solución al chat/WebSockets)
@@ -22,20 +23,16 @@ pusher_client = pusher.Pusher(
     ssl=True
 )
 
-# Inicializa la aplicación Flask.
-# Configuración para que Vercel encuentre todos los archivos (HTML, CSS, JS)
-# desde el directorio raíz, sin una carpeta 'static' dedicada.
-app = Flask(__name__, template_folder='.', static_folder='.', static_url_path='')
+# Inicializa la aplicación Flask
+# La inicialización simple permite que las rutas personalizadas de estáticos (abajo) tomen el control.
+app = Flask(__name__) 
 oauth = OAuth(app)
 
-# Clave secreta: Usa la variable de entorno 'SECRET_KEY' en Vercel.
+# Clave secreta: ¡Usar variable de entorno! (Si no está definida, usa una generada aleatoriamente)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(16))
-
-# Configuración de la base de datos
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Inicializa SQLAlchemy
 db = SQLAlchemy(app)
 
 # --- Modelo de Base de Datos ---
@@ -52,13 +49,13 @@ class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     content = db.Column(db.String(500), nullable=False)
-    message_type = db.Column(db.String(10), nullable=False, default='text') 
+    message_type = db.Column(db.String(10), nullable=False, default='text')
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
         return {'id': self.id, 'username': self.username, 'content': self.content, 'type': self.message_type, 'timestamp': self.timestamp.isoformat()}
 
-# --- Configuración de OAuth 2.0 (se usan variables de entorno) ---
+# --- Configuración de OAuth 2.0 (Usa variables de entorno, con tus claves como fallback) ---
 oauth.register(
     name='google',
     client_id=os.environ.get('GOOGLE_CLIENT_ID', '71330665801-6joq0752g7hhhp2hmld06hrfg67rhji0.apps.googleusercontent.com'),
@@ -83,11 +80,11 @@ oauth.register(
     client_kwargs={'scope': 'User.Read'},
 )
 
-# Definición de las Rutas (URLs)
+# --- Definición de las Rutas de la Aplicación ---
 
 @app.route('/')
 def index():
-    return render_template('index.html') 
+    return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -95,9 +92,7 @@ def login():
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')
-
         user = User.query.filter_by(username=username).first()
-        
         if user and bcrypt.checkpw(password.encode('utf-8'), user.password_hash.encode('utf-8')):
             session['username_for_2fa'] = username
             return jsonify({'success': True})
@@ -110,10 +105,8 @@ def verify_code():
     data = request.get_json()
     code = data.get('code')
     username = session.get('username_for_2fa')
-
     if not username:
         return jsonify({'success': False, 'message': 'Sesión expirada. Vuelve a intentarlo.'}), 400
-
     user = User.query.filter_by(username=username).first()
     if user and user.security_code == code:
         session['logged_in'] = True
@@ -130,18 +123,13 @@ def register():
         username = data.get('username')
         password = data.get('password')
         security_code = data.get('security_code')
-
         if User.query.filter_by(username=username).first():
             return jsonify({'success': False, 'message': 'El nombre de usuario ya existe.'}), 409
-        
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
         new_user = User(username=username, password_hash=hashed_password, security_code=security_code)
         db.session.add(new_user)
         db.session.commit()
-
         return jsonify({'success': True, 'message': '¡Registro exitoso! Ahora puedes iniciar sesión.'})
-
     return render_template('register.html')
 
 @app.route('/noticias')
@@ -170,32 +158,54 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('index'))
 
-# --- API para Noticias ---
+# --- API para Noticias (sin cambios) ---
 @app.route('/api/news')
 def get_news():
     news_data = [
-        # ... (Tus datos de noticias)
         {
             "title": "¡La actualización 1.21 \"Tricky Trials\" ya está aquí!",
             "date": "13 JUN 2024",
             "category": "juego",
-            "summary": "¡La aventura te espera!...",
+            "summary": "¡La aventura te espera! Adéntrate en las Cámaras de Desafío, enfréntate a nuevos enemigos como el Breeze y el Bogged, y fabrica la poderosa Maza. Esta actualización está llena de retos y recompensas.",
             "image": "static/noticias/TRICKY_TRIALS.jpg",
             "link": "https://es.minecraft.wiki/w/Tricky_Trials",
             "icon": "fa-dungeon",
             "buttonText": "Leer más"
         },
-        # ... (Más noticias)
+        {
+            "title": "Explora el mundo de \"Trails & Tales\" (1.20)",
+            "date": "07 JUN 2023",
+            "category": "juego",
+            "summary": "La actualización 1.20 trajo la arqueología, los sniffers, camellos, y los hermosos biomas de cerezos. ¡Es hora de crear tus propias historias mientras exploras un mundo más vivo que nunca!",
+            "image": "static/noticias/Trails and Tales.jpg",
+            "link": "https://minecraft.wiki/w/Trails_%26_Tales",
+            "icon": "fa-map-signs",
+            "buttonText": "Leer más"
+        },
+        {
+            "title": "¡GLauncher se asocia con TropiRumba!",
+            "date": "20 OCT 2025",
+            "category": "oficial",
+            "summary": "¡Ahora puedes escuchar la mejor música mientras juegas! Nos hemos asociado con la radio TropiRumba Stereo 89.7 FM. Accede directamente desde el botón \"Radio\" en el launcher.",
+            "image": "static/images/news/GLauncher_X_TropiRumba.png",
+            "link": "radio.html",
+            "icon": "fa-broadcast-tower",
+            "buttonText": "Escuchar Ahora"
+        },
     ]
     return jsonify(news_data)
 
-# --- API para Información de Usuario ---
+# --- APIs de Usuario y Chat (con lógica de Pusher) ---
 @app.route('/api/user_info')
 def user_info():
     if 'logged_in' in session and session.get('logged_in'):
         user = User.query.filter_by(username=session.get('username')).first()
         if user:
-            return jsonify({'username': user.username, 'is_admin': False, 'avatar_url': user.avatar_url})
+            return jsonify({
+                'username': user.username, 
+                'is_admin': False, 
+                'avatar_url': user.avatar_url
+            })
     return jsonify({'error': 'No autenticado'}), 401
 
 @app.route('/api/chat_messages')
@@ -211,17 +221,14 @@ def get_chat_messages():
             return jsonify({"error": "Formato de fecha inválido"}), 400
     else:
         query = query.order_by(ChatMessage.timestamp.desc()).limit(50)
-
     messages = query.order_by(ChatMessage.timestamp.asc()).all()
     return jsonify([msg.to_dict() for msg in messages])
 
-# Endpoint para CREAR un mensaje (¡Usa Pusher!)
 @app.route('/api/chat_messages/create', methods=['POST'])
 def create_chat_message():
     data = request.get_json()
     if not data or not data.get('content'):
         return jsonify({'error': 'El contenido no puede estar vacío'}), 400
-
     new_message = ChatMessage(
         username=data.get('username', 'Anónimo'),
         content=data.get('content'),
@@ -229,16 +236,16 @@ def create_chat_message():
     )
     db.session.add(new_message)
     db.session.commit()
-
-    # LÓGICA DE PUSHER
+    # LÓGICA DE PUSHER (Notifica a todos los clientes)
     try:
         pusher_client.trigger('chat_radio', 'new_message', new_message.to_dict())
     except Exception as e:
+        # Se guarda en DB incluso si Pusher falla
         print(f"Error al enviar mensaje por Pusher: {e}") 
-        
     return jsonify(new_message.to_dict()), 201
 
-# --- Rutas para OAuth ---
+# --- Rutas para OAuth (sin cambios) ---
+
 @app.route('/login/google')
 def login_google():
     redirect_uri = url_for('auth_google', _external=True)
@@ -248,24 +255,19 @@ def login_google():
 def auth_google():
     token = oauth.google.authorize_access_token()
     user_info = oauth.google.get('userinfo').json() 
-
     social_id = user_info.get('sub')
     avatar = user_info.get('picture') 
     if not social_id:
         return 'Error: No se pudo obtener el ID de usuario de Google.', 400
-
     user = User.query.filter_by(provider='google', social_id=social_id).first()
-
     if not user:
         username = user_info.get('name', user_info.get('given_name', f"user_{social_id[:8]}"))
         if User.query.filter_by(username=username).first():
             username = f"{username}_{social_id[:4]}"
-
         new_user = User(username=username, provider='google', social_id=social_id, avatar_url=avatar)
         db.session.add(new_user)
         db.session.commit()
         user = new_user
-
     session['logged_in'] = True
     session['username'] = user.username
     return redirect(url_for('dashboard'))
@@ -279,25 +281,60 @@ def login_microsoft():
 def auth_microsoft():
     token = oauth.microsoft.authorize_access_token()
     user_info = oauth.microsoft.get('me').json()
-    
     social_id = user_info.get('id')
     if not social_id:
         return 'Error: No se pudo obtener el ID de usuario de Microsoft.', 400
-
     user = User.query.filter_by(provider='microsoft', social_id=social_id).first()
-
     if not user:
         username = user_info.get('displayName', f"user_{social_id[:8]}")
         if User.query.filter_by(username=username).first():
             username = f"{username}_{social_id[:4]}"
-
         new_user = User(username=username, provider='microsoft', social_id=social_id)
         db.session.add(new_user)
         db.session.commit()
         user = new_user
-
     session['logged_in'] = True
     session['username'] = user.username
     return redirect(url_for('dashboard'))
 
-# --- Bloque de ejecución local ELIMINADO para Vercel ---
+# --------------------------------------------------------------------------------------
+# --- RUTAS PERSONALIZADAS PARA SERVIR ARCHIVOS ESTÁTICOS (SOLUCIÓN CSS/JS) ---
+# --------------------------------------------------------------------------------------
+# Estas rutas usan send_from_directory para servir los archivos directamente desde sus carpetas
+# en la raíz del proyecto, resolviendo el problema del CSS/JS en Vercel.
+
+@app.route('/css/<path:filename>')
+def serve_css(filename):
+    """Sirve archivos CSS desde la carpeta 'css'."""
+    return send_from_directory('css', filename)
+
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    """Sirve archivos JS desde la carpeta 'js'."""
+    return send_from_directory('js', filename)
+
+@app.route('/images/<path:filename>')
+def serve_images(filename):
+    """Sirve archivos de imágenes desde la carpeta 'images'."""
+    return send_from_directory('images', filename)
+
+@app.route('/sounds/<path:filename>')
+def serve_sounds(filename):
+    """Sirve archivos de sonido desde la carpeta 'sounds'."""
+    return send_from_directory('sounds', filename)
+    
+# Ruta general para archivos específicos en la raíz (ej: co-style-style.css o iconos)
+@app.route('/<path:filename>')
+def serve_root_files(filename):
+    """Sirve archivos específicos que se encuentran en la raíz del proyecto."""
+    # Lista de archivos que están en la raíz y deben ser servidos:
+    safe_files = ['co-style-style.css', 'favicon.ico', 'glauncher.ico', 'sitemap.xml', 'robots.txt']
+    if filename in safe_files:
+        return send_from_directory('.', filename)
+    
+    # Si no es un archivo estático de la raíz, devuelve un 404 (las rutas de la app lo manejarán antes).
+    return '', 404
+    
+# -------------------------------------------------------------
+# --- ¡IMPORTANTE! EL BLOQUE DE EJECUCIÓN LOCAL HA SIDO ELIMINADO ---
+# -------------------------------------------------------------
