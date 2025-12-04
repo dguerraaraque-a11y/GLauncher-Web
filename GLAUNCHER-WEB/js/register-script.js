@@ -1,28 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('register-form');
-    const messageBox = document.getElementById('form-message-box');
-
-    function showMessage(message, isError = true) {
-        messageBox.textContent = message;
-        messageBox.className = 'form-message'; // Reset
-        messageBox.classList.add(isError ? 'error' : 'success');
-        messageBox.style.display = 'block';
-    }
 
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        messageBox.style.display = 'none';
 
         const password = document.getElementById('reg-password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         const securityCode = document.getElementById('security-code').value;
 
         if (password !== confirmPassword) {
-            showMessage('Las contraseñas no coinciden.');
+            window.showNotification('Las contraseñas no coinciden.', 'error');
             return;
         }
         if (!/^\d{6}$/.test(securityCode)) {
-            showMessage('El código de seguridad debe tener exactamente 6 dígitos numéricos.');
+            window.showNotification('El código de seguridad debe tener exactamente 6 dígitos.', 'error');
             return;
         }
 
@@ -41,15 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (response.ok) {
-                showMessage(result.message, false); // Mensaje de éxito
+                window.showNotification(result.message, 'success');
                 setTimeout(() => {
-                    window.location.href = "login.html"; // Redirigir al login
+                    window.location.href = "/login"; // Redirigir al login
                 }, 2000);
             } else {
-                showMessage(result.message || 'Error desconocido durante el registro.');
+                window.showNotification(result.message || 'Error desconocido.', 'error');
             }
         } catch (error) {
-            showMessage('Error de conexión con el servidor.');
+            window.showNotification('Error de conexión con el servidor.', 'error');
         }
     });
 });

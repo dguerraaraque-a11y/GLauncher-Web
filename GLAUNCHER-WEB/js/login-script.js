@@ -4,22 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const codeEntrySection = document.getElementById('code-entry-section');
     const verifyCodeButton = document.getElementById('verify-code-button');
     const goBackLink = document.getElementById('go-back-login');
-    const messageBox = document.getElementById('form-message-box');
-
-    function showMessage(message, isError = true) {
-        messageBox.textContent = message;
-        messageBox.className = 'form-message'; // Reset classes
-        messageBox.classList.add(isError ? 'error' : 'success');
-        messageBox.style.display = 'block';
-    }
     
     // Mostrar mensaje si se redirige desde el panel de admin
     const urlParams = new URLSearchParams(window.location.search);
     const reason = urlParams.get('reason');
     if (reason === 'login_required') {
-        showMessage('Debes iniciar sesión para acceder al panel de administración.', false);
+        window.showNotification('Debes iniciar sesión para acceder a esa página.', 'info');
     } else if (reason === 'admin_required') {
-        showMessage('Acceso denegado. Necesitas permisos de administrador.', true);
+        window.showNotification('Acceso denegado. Necesitas permisos de administrador.', 'error');
     }
 
     // Función para verificar si ya hay una sesión activa
@@ -43,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Enviar credenciales al backend
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        messageBox.style.display = 'none';
 
         const formData = new FormData(loginForm);
         // Creamos el objeto de datos manualmente para enviar solo lo necesario.
@@ -66,17 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 credentialsSection.style.display = 'none';
                 codeEntrySection.style.display = 'block';
             } else {
-                showMessage(result.message || 'Error desconocido.');
+                window.showNotification(result.message || 'Error desconocido.', 'error');
             }
         } catch (error) {
-            showMessage('Error de conexión con el servidor.');
+            window.showNotification('Error de conexión con el servidor.', 'error');
         }
     });
 
     // 2. Enviar código 2FA al backend
     verifyCodeButton.addEventListener('click', async () => {
         const code = document.getElementById('security-code').value;
-        messageBox.style.display = 'none';
 
         try {
             const response = await fetch(`/verify-code`, {
@@ -92,10 +82,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Redirigir a la URL que nos da el backend
                 window.location.href = result.redirect_url;
             } else {
-                showMessage(result.message || 'Error desconocido.');
+                window.showNotification(result.message || 'Error desconocido.', 'error');
             }
         } catch (error) {
-            showMessage('Error de conexión con el servidor.');
+            window.showNotification('Error de conexión con el servidor.', 'error');
         }
     });
 
@@ -104,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         codeEntrySection.style.display = 'none';
         credentialsSection.style.display = 'block';
-        messageBox.style.display = 'none';
     });
 
     // Al cargar la página, primero verificamos si ya hay una sesión.

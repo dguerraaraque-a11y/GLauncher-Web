@@ -4,6 +4,64 @@
  */
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ========================================================
+    // 1. SISTEMA DE CARGA, NOTIFICACIONES Y OFFLINE
+    // ========================================================
+
+    // --- Lógica del Spinner de Carga ---
+    const loader = document.getElementById('loader-overlay');
+    if (loader) {
+        window.addEventListener('load', () => {
+            loader.classList.add('hidden');
+            // Eliminar el loader del DOM después de la transición para mejorar el rendimiento
+            setTimeout(() => {
+                loader.remove();
+            }, 500);
+        });
+    }
+
+    // --- Lógica de la Pantalla de Desconexión ---
+    const offlineOverlay = document.getElementById('offline-overlay');
+    
+    function updateOnlineStatus() {
+        if (navigator.onLine) {
+            offlineOverlay?.classList.remove('visible');
+        } else {
+            offlineOverlay?.classList.add('visible');
+        }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus(); // Comprobar estado al cargar la página
+
+    // --- Sistema Global de Notificaciones Flotantes ---
+    window.showNotification = (message, type = 'info') => {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        let iconClass = 'fa-info-circle';
+        if (type === 'success') iconClass = 'fa-check-circle';
+        if (type === 'error') iconClass = 'fa-times-circle';
+
+        notification.innerHTML = `<i class="fas ${iconClass}"></i> ${message}`;
+        
+        container.appendChild(notification);
+
+        // Eliminar la notificación del DOM después de que termine la animación
+        setTimeout(() => {
+            notification.remove();
+        }, 5000); // 5 segundos (4.5s de animación + 0.5s de margen)
+    };
+
+
+    // ========================================================
+    // 2. EFECTOS DE SONIDO GLOBALES
+    // ========================================================
+
     // Quitar la clase de carga para activar la animación de entrada
     document.body.classList.remove('is-loading');
 
@@ -43,7 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // LÓGICA PARA MENSAJES DE LANZAMIENTO (INDEX.HTML)
     // ========================================================
 
-    const BACKEND_URL = "https://glauncher-backend.onrender.com"; // <-- ¡TU URL DE RENDER AQUÍ!
     let currentPage = 1;
     const messagesPerPage = 10;
 
@@ -64,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para verificar el estado de inicio de sesión
     async function checkLoginStatus() {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/user_info`, {
+            const response = await fetch(`/api/user_info`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -120,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/launch_messages?page=${page}&limit=${messagesPerPage}`);
+            const response = await fetch(`/api/launch_messages?page=${page}&limit=${messagesPerPage}`);
             if (!response.ok) throw new Error('No se pudieron cargar los mensajes.');
             
             const { messages, has_more } = await response.json();
@@ -162,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
         try {
-            const response = await fetch(`${BACKEND_URL}/api/launch_messages/create`, {
+            const response = await fetch(`/api/launch_messages/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -188,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Función de inicialización para index.html
-    window.initializeLaunchMessages = async () => {
+    async function initializeLaunchMessages() {
         const loginStatus = await checkLoginStatus();
         const messageInputArea = document.getElementById('message-input-area');
         const loginToPostMessage = document.getElementById('login-to-post-message');
@@ -222,5 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (loadMoreBtn) loadMoreBtn.addEventListener('click', () => loadLaunchMessages(currentPage + 1));
         loadLaunchMessages(1); // Cargar la primera página de mensajes
-    };
+    }
+
+    // Ejecutar la inicialización solo si estamos en la página de inicio
+    if (document.getElementById('launch-messages-section')) {
+        initializeLaunchMessages();
+    }
 });
