@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para verificar si ya hay una sesión activa
     async function checkSession() {
         try {
-            const response = await fetch(`/api/user_info`, {
+            const response = await fetch(`https://glauncher-api.onrender.com/api/user_info`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch(`/login`, {
+            const response = await fetch(`https://glauncher-api.onrender.com/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const code = document.getElementById('security-code').value;
 
         try {
-            const response = await fetch(`/verify-code`, {
+            const response = await fetch(`https://glauncher-api.onrender.com/verify-code`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code: code }),

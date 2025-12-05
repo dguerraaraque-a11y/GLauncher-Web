@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Función para verificar el estado de inicio de sesión
     async function checkLoginStatus() {
         try {
-            const response = await fetch(`/api/user_info`, {
+            const response = await fetch(`https://glauncher-api.onrender.com/api/user_info`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`/api/launch_messages?page=${page}&limit=${messagesPerPage}`);
+            const response = await fetch(`https://glauncher-api.onrender.com/api/launch_messages?page=${page}&limit=${messagesPerPage}`);
             if (!response.ok) throw new Error('No se pudieron cargar los mensajes.');
             
             const { messages, has_more } = await response.json();
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
         try {
-            const response = await fetch(`/api/launch_messages/create`, {
+            const response = await fetch(`https://glauncher-api.onrender.com/api/launch_messages/create`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

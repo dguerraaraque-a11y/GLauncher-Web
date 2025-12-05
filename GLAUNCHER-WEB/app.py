@@ -19,9 +19,9 @@ DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
 
 # Configuración de Pusher (Claves leídas de Render)
 pusher_client = pusher.Pusher(
-    app_id=os.environ.get('PUSHER_APP_ID', '1234567'),  
-    key=os.environ.get('PUSHER_KEY', 'default_key'),    
-    secret=os.environ.get('PUSHER_SECRET', 'default_secret'), 
+    app_id=os.environ.get('PUSHER_APP_ID', '2087094'),  
+    key=os.environ.get('PUSHER_KEY', 'ae6d31e8c0f0e1661afa'),    
+    secret=os.environ.get('PUSHER_SECRET', 'd6a2d6afcd17441de572'), 
     cluster=os.environ.get('PUSHER_CLUSTER', 'us2'),    
     ssl=True
 )

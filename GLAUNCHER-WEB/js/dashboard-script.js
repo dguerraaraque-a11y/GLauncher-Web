@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkSessionAndLoadUser() {
         try {
             // La URL es relativa, funcionará tanto en local como en producción (Render)
-            const response = await fetch(`/api/user_info`, {
+            const response = await fetch(`https://glauncher-api.onrender.com/api/user_info`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include' // Importante para enviar cookies de sesión
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutButton.addEventListener('click', () => {
             window.showNotification('Cerrando sesión...', 'info');
             
-            fetch(`/logout`, {
+            fetch(`https://glauncher-api.onrender.com/logout`, {
                 method: 'GET',
                 credentials: 'include'
             })

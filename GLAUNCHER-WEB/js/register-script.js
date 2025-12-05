@@ -22,8 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         delete data.confirm_password; // No necesitamos enviar esto al backend
 
         try {
-            const response = await fetch(`/register`, {
-                method: 'POST',
+            const response = await fetch(`
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
                 credentials: 'include' // Importante para manejar sesiones/cookies
