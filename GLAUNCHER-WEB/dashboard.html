@@ -14,7 +14,7 @@
     <div id="loader-overlay" class="loader-overlay"><div class="spinner"></div></div>
     <div id="notification-container"></div>
     <div id="offline-overlay" class="offline-overlay"><div class="offline-content"><i class="fas fa-wifi"></i><h2>Sin Conexión</h2><p>Revisa tu red e inténtalo de nuevo.</p></div></div>
-    
+
 
         <header class="header">
         <div class="logo-container">
@@ -37,45 +37,62 @@
     </header>
 
     <main class="dashboard-main-content">
-        <h1 class="dashboard-title">
-            <i class="fas fa-terminal"></i> GLAUNCHER &gt; Panel de Control <i class="fas fa-shield-alt"></i> <span id="dashboard-username">USUARIO_GL</span>
-        </h1>
-
         <div class="dashboard-container">
             
-            <aside class="dashboard-sidebar">
-                <div class="user-info-card">
-                    <img src="images/avatars/genotrax.jpg" alt="Avatar" class="user-avatar">
-                    <h2 class="neon-text mt-15">
-                    </h2>
-                    <p class="text-color-dark">Acceso Autorizado | Nivel 0</p>
+            <!-- Nueva Barra de Navegación Flotante -->
+            <nav class="floating-nav">
+                <div class="nav-profile-section">
+                    <img id="nav-avatar" src="images/avatars/default-avatar.png" alt="Avatar" class="nav-avatar">
+                    <span id="nav-username">Cargando...</span>
                 </div>
-                
-                <!-- La navegación de escritorio se mantiene aquí -->
-                <nav class="dashboard-nav desktop-nav">
-                    <a href="#" class="nav-item active" data-target="launcher-section"><i class="fas fa-rocket"></i> Lanzador</a>
-                    <a href="#" class="nav-item" data-target="stats-section"><i class="fas fa-chart-line"></i> Estadísticas</a>
-                    <!-- El script de dashboard-script.js se encargará de mostrar/ocultar esto -->
-                    <a href="/admin" id="admin-nav-button" class="nav-item" style="display: none;"><i class="fas fa-user-shield"></i> Admin</a>
-                    <a href="#" class="nav-item" data-target="settings-section"><i class="fas fa-cogs"></i> Configuraciones</a>
-                </nav>
-            </aside>
+                <div class="nav-links-section">
+                    <a href="#" class="floating-nav-item active" data-target="gchat-section"><i class="fas fa-comments"></i> GChat</a>
+                    <a href="#" class="floating-nav-item" data-target="friends-section"><i class="fas fa-user-friends"></i> Amigos</a>
+                    <a href="#" class="floating-nav-item" data-target="skins-section"><i class="fas fa-paint-brush"></i> Skins</a>
+                    <a href="#" class="floating-nav-item" data-target="stats-section"><i class="fas fa-chart-line"></i> Estadísticas</a>
+                    <a href="#" class="floating-nav-item" data-target="settings-section"><i class="fas fa-cogs"></i> Ajustes</a>
+                    <a href="/admin" id="admin-nav-button" class="floating-nav-item" style="display: none;"><i class="fas fa-user-shield"></i> Admin</a>
+                </div>
+                <div class="nav-actions-section">
+                    <button id="launch-game-btn" class="launch-button"><i class="fas fa-play"></i> Iniciar Juego</button>
+                    <button id="logout-btn" class="logout-button" title="Cerrar Sesión"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </nav>
             
             <section class="dashboard-content-area">
-                <!-- Sección de Lanzamiento (Ahora con ID) -->
-                <section id="launcher-section" class="content-section active">
-                    <header class="section-header"><i class="fas fa-gamepad"></i> Lanzar GLauncher</header>
-                    <div class="launch-game-controls simplified">
-                        <p>Haz clic en el botón para iniciar Minecraft con las optimizaciones de GLauncher.</p>
-                        <button id="launch-game-btn" class="neon-button-glow button-green"><i class="fas fa-play-circle"></i> Iniciar Juego</button>
-                        <p id="launch-status" class="launch-status"></p>
+                <!-- SECCIÓN DE GCHAT (NUEVA) -->
+                <section id="gchat-section" class="content-section active">
+                    <header class="section-header"><i class="fas fa-comments"></i> GChat - Mensajería</header>
+                    <div class="placeholder-content">
+                        <i class="fas fa-comments placeholder-icon"></i>
+                        <h3>El chat de GLauncher está en desarrollo</h3>
+                        <p>Próximamente podrás chatear con tus amigos, crear grupos, hacer videollamadas y mucho más.</p>
                     </div>
                 </section>
 
-                <!-- Sección de Estadísticas (Ahora con ID) -->
+                <!-- SECCIÓN DE AMIGOS (NUEVA) -->
+                <section id="friends-section" class="content-section">
+                    <header class="section-header"><i class="fas fa-user-friends"></i> Amigos</header>
+                    <div class="placeholder-content">
+                        <i class="fas fa-user-friends placeholder-icon"></i>
+                        <h3>Sistema de Amigos</h3>
+                        <p>Aquí podrás buscar, añadir y aceptar solicitudes de amistad. También verás el estado de conexión de tus amigos.</p>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN DE SKINS (NUEVA) -->
+                <section id="skins-section" class="content-section">
+                    <header class="section-header"><i class="fas fa-paint-brush"></i> Gestor de Skins</header>
+                    <div class="placeholder-content">
+                        <i class="fas fa-paint-brush placeholder-icon"></i>
+                        <h3>Visualizador y Gestor de Skins 3D</h3>
+                        <p>Importa tus skins, visualízalas en 3D y adminístralas en una lista personalizada. ¡Función en desarrollo!</p>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN DE ESTADÍSTICAS (EXISTENTE) -->
                 <section id="stats-section" class="content-section">
                     <header class="section-header"><i class="fas fa-database"></i> Registros y Analítica</header>
-                    
                     <div class="stats-grid">
                         <div class="stat-card stat-hacker stat-pink animated-card">
                             <i class="fas fa-clock"></i>
@@ -83,58 +100,53 @@
                             <p class="text-color-dark">Tiempo de Juego Total</p>
                         </div>
                         <div class="stat-card stat-hacker stat-blue animated-card">
-                            <i class="fas fa-map-marked-alt"></i>
+                            <i class="fas fa-cubes"></i>
                             <p class="stat-main-value">0</p>
                             <p class="text-color-dark">Bloques Minados</p>
                         </div>
                         <div class="stat-card stat-hacker stat-green animated-card">
                             <i class="fas fa-bug"></i>
                             <p class="stat-main-value">0</p>
-                            <p class="text-color-dark">Errores Reportados (Última Sesión)</p>
-                        </div>
-                    </div>
-                    
-                    <div class="terminal-box">
-                        <p class="terminal-title">LOG [CONSOLE] > Historial Reciente</p>
-                        <div class="detail-list">
-                            <div class="detail-item animated-item">
-                                <span class="stat-label"><i class="fas fa-check-circle" style="color:var(--neon-green);"></i> [2025-09-27]</span>
-                                <span class="stat-value">CONEXIÓN OK</span>
-                            </div>
-                            <div class="detail-item animated-item">
-                                <span class="stat-label"><i class="fas fa-exclamation-triangle" style="color:var(--neon-pink);"></i> [2025-09-25]</span>
-                                <span class="stat-value">CORS BLOCK DETECTED</span>
-                            </div>
-                            <div class="detail-item animated-item">
-                                <span class="stat-label"><i class="fas fa-info-circle" style="color:var(--neon-blue);"></i> [2025-09-24]</span>
-                                <span class="stat-value">UPDATE PUSHED</span>
-                            </div>
+                            <p class="text-color-dark">Errores Reportados</p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Nueva Sección de Configuraciones (Ahora con ID) -->
+                <!-- SECCIÓN DE AJUSTES (MEJORADA) -->
                 <section id="settings-section" class="content-section">
-                    <header class="section-header"><i class="fas fa-cogs"></i> Configuraciones</header>
-                    <div class="settings-placeholder">
-                        <i class="fas fa-tools"></i>
-                        <p>El área de configuraciones está en desarrollo.</p>
-                        <span>¡Vuelve pronto para más opciones!</span>
+                    <header class="section-header"><i class="fas fa-cogs"></i> Ajustes de Cuenta</header>
+                    <div class="settings-form-container">
+                        <form id="account-settings-form">
+                            <h4><i class="fas fa-user-edit"></i> Perfil</h4>
+                            <div class="form-group">
+                                <label for="username-change">Cambiar nombre de usuario</label>
+                                <input type="text" id="username-change" name="username" class="neon-input-field" placeholder="Nuevo nombre...">
+                            </div>
+                            <button type="submit" class="action-btn save-btn">Guardar Cambios</button>
+                        </form>
+
+                        <form id="privacy-settings-form">
+                            <h4><i class="fas fa-user-secret"></i> Privacidad</h4>
+                            <div class="setting-toggle">
+                                <label for="show-online-status">Mostrar mi estado de conexión a mis amigos</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="show-online-status" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-toggle">
+                                <label for="allow-friend-requests">Permitir solicitudes de amistad de cualquiera</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="allow-friend-requests" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </form>
                     </div>
                 </section>
             </section>
         </div>
     </main>
-
-    <!-- Barra de Navegación Inferior para Móviles -->
-    <nav class="bottom-nav mobile-nav">
-        <a href="#" class="nav-item active" data-target="launcher-section"><i class="fas fa-rocket"></i><span>Lanzador</span></a>
-        <a href="#" class="nav-item" data-target="stats-section"><i class="fas fa-chart-line"></i><span>Estadísticas</span></a>
-        <!-- El script también gestionará este botón -->
-        <a href="/admin" id="admin-nav-button-mobile" class="nav-item" style="display: none;"><i class="fas fa-user-shield"></i><span>Admin</span></a>
-        <a href="#" class="nav-item" data-target="settings-section"><i class="fas fa-cogs"></i><span>Ajustes</span></a>
-        <button id="logout-btn" class="nav-item logout"><i class="fas fa-sign-out-alt"></i><span>Salir</span></button> <!-- El JS manejará el logout -->
-    </nav>
 
     <script src="js/dashboard-script.js"></script>
 </body>

@@ -1,126 +1,125 @@
 /*
  * ==================================================================================
  * GLAUNCHER - ESTILOS ESPECÍFICOS PARA EL DASHBOARD (DASHBOARD.HTML)
- * Versión 2.0: Con animaciones y diseño responsivo.
+ * Versión 3.0: Rediseño con barra flotante.
  * ==================================================================================
  */
 
 /* --- Animaciones de Entrada --- */
 @keyframes fade-in-up {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float-animation {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
 /* Contenedor principal del dashboard */
 .dashboard-container {
-    /* Por defecto, apilado para móviles */
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 20px 15px 100px 15px; /* Padding inferior para no ser tapado por la nav */
+    gap: 30px;
+    padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
-    animation: fade-in-up 0.6s ease-out forwards; /* Animación de entrada */
+    animation: fade-in-up 0.6s ease-out;
 }
 
-/* Título principal del dashboard */
-.dashboard-title {
-    font-size: 2.5em;
-    text-align: center;
-    margin-bottom: 30px;
-    color: var(--neon-blue);
-    text-shadow: 0 0 10px var(--neon-blue);
-    animation: neon-pulse-rgb 6s infinite alternate;
-}
-
-/* Sidebar del dashboard */
-.dashboard-sidebar {
-    /* En móvil, es solo una tarjeta de usuario */
-    width: 100%;
-    background-color: var(--secondary-bg-color);
+/* --- Nueva Barra de Navegación Flotante --- */
+.floating-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: rgba(22, 27, 34, 0.9); /* secondary-bg con transparencia */
+    backdrop-filter: blur(10px);
     border-radius: var(--border-radius-base);
-    padding: 20px;
-    border: 1px solid var(--neon-pink);
-    box-shadow: var(--shadow-pink);
-    display: flex;
-    flex-direction: column; /* Apila la tarjeta y la nav (en escritorio) */
+    border: 1px solid var(--neon-blue);
+    box-shadow: var(--shadow-blue);
+    position: sticky;
+    top: 80px; /* Debajo del header principal */
+    z-index: 900;
+    animation: float-animation 5s ease-in-out infinite;
 }
 
-.user-info-card {
-    text-align: center;
-    padding-bottom: 20px;
-    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
-}
-
-.user-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid var(--neon-green);
-    object-fit: cover;
-    box-shadow: var(--shadow-green);
-    animation: neon-pulse-shadow 3s infinite alternate;
-    margin-bottom: 10px;
-}
-
-.user-info-card h2 {
-    font-size: 1.5em;
-    color: var(--neon-blue);
-    text-shadow: 0 0 8px var(--neon-blue);
-}
-
-.user-info-card p {
-    font-size: 0.9em;
-    color: var(--text-color-dark);
-}
-
-.dashboard-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.dashboard-nav .nav-item {
+.nav-profile-section {
     display: flex;
     align-items: center;
+    gap: 15px;
+}
+
+.nav-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid var(--neon-green);
+    box-shadow: var(--shadow-green);
+}
+
+#nav-username {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.nav-links-section {
+    display: flex;
     gap: 10px;
-    padding: 12px 15px;
+}
+
+.floating-nav-item {
+    padding: 8px 15px;
     border-radius: 5px;
-    color: var(--text-color-light);
-    background-color: var(--main-bg-color);
-    border: 1px solid var(--main-bg-color);
+    font-weight: bold;
     transition: all 0.3s ease;
+    border: 1px solid transparent;
 }
 
-.dashboard-nav .nav-item:hover {
-    background-color: var(--neon-blue);
+.floating-nav-item:hover {
+    color: var(--neon-blue);
+    background-color: var(--main-bg-color);
+}
+
+.floating-nav-item.active {
+    background-color: var(--neon-pink);
     color: var(--main-bg-color);
-    box-shadow: 0 0 10px var(--neon-blue);
-    transform: translateX(5px);
+    border-color: var(--neon-pink);
+    box-shadow: var(--shadow-pink);
 }
 
-.dashboard-nav .nav-item.active {
+.nav-actions-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.launch-button {
+    padding: 10px 20px;
     background-color: var(--neon-green);
     color: var(--main-bg-color);
-    border-color: var(--neon-green);
-    box-shadow: 0 0 15px var(--neon-green);
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-green);
+}
+.launch-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--neon-green);
 }
 
-.dashboard-nav .logout {
-    background-color: var(--neon-pink);
-    border-color: var(--neon-pink);
-    margin-top: 20px;
-}
-
-.dashboard-nav .logout:hover {
-    background-color: #ff33ff;
-    box-shadow: 0 0 15px var(--neon-pink);
+.logout-button {
+    background: none;
+    border: 1px solid var(--neon-pink);
+    color: var(--neon-pink);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 /* Área de contenido principal del dashboard */
@@ -160,20 +159,6 @@
     margin-right: 10px;
 }
 
-/* Sección de Lanzamiento del Juego */
-.launch-game-section {
-    text-align: center;
-    border-color: var(--neon-green);
-    box-shadow: var(--shadow-green);
-}
-
-.launch-game-controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
 .launch-game-btn {
     padding: 15px 30px;
     border: none;
@@ -205,26 +190,6 @@
     font-size: 1.1em;
     color: var(--text-color-dark);
     min-height: 25px; /* Para evitar saltos de diseño */
-}
-
-.progress-bar {
-    width: 80%;
-    max-width: 500px;
-    height: 20px;
-    background-color: var(--main-bg-color);
-    border-radius: 10px;
-    border: 1px solid var(--neon-blue);
-    overflow: hidden;
-    margin-top: 10px;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
-}
-
-.progress-bar-fill {
-    height: 100%;
-    width: 0%;
-    background-color: var(--neon-blue);
-    border-radius: 10px;
-    transition: width 0.5s ease-in-out, background-color 0.3s ease;
 }
 
 /* Sección de Estadísticas */
@@ -288,128 +253,105 @@
     color: var(--text-color-light);
 }
 
-/* Sección de Terminal/Logs */
-.terminal-box {
-    background-color: var(--main-bg-color);
-    border-radius: var(--border-radius-base);
-    padding: 20px;
-    border: 1px solid var(--neon-green);
-    box-shadow: var(--shadow-green);
-}
-
-.terminal-title {
-    font-family: 'Consolas', monospace;
-    color: var(--neon-green);
-    font-size: 1.1em;
-    margin-bottom: 15px;
-    border-bottom: 1px dashed rgba(57, 255, 20, 0.3);
-    padding-bottom: 10px;
-}
-
-.detail-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.detail-item {
-    display: flex;
-    justify-content: space-between;
-    font-family: 'Consolas', monospace;
-    font-size: 0.9em;
-}
-
-/* Animación escalonada para los items del log */
-.animated-item {
-    animation: fade-in-up 0.5s ease-out forwards;
-    opacity: 0;
-}
-.animated-item:nth-child(1) { animation-delay: 0.5s; }
-.animated-item:nth-child(2) { animation-delay: 0.6s; }
-.animated-item:nth-child(3) { animation-delay: 0.7s; }
-
-.detail-item .stat-label {
-    color: var(--text-color-dark);
-}
-
-.detail-item .stat-value {
-    color: var(--text-color-light);
-}
-
-/* Nueva sección de configuraciones */
-.settings-placeholder {
+/* Contenido de Platzhalter para secciones en desarrollo */
+.placeholder-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     color: var(--text-color-dark);
-    min-height: 200px;
+    min-height: 300px;
     padding: 40px 20px;
 }
 
-.settings-placeholder i {
-    font-size: 3em;
+.placeholder-icon {
+    font-size: 4em;
     color: var(--neon-blue);
     margin-bottom: 20px;
     animation: neon-pulse-rgb 6s infinite;
 }
 
-.settings-placeholder p {
+.placeholder-content h3 {
     font-size: 1.2em;
     color: var(--text-color-light);
     margin-bottom: 10px;
 }
 
-/* --- Barra de Navegación Inferior (Solo Móvil) --- */
-.bottom-nav {
-    display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(13, 17, 23, 0.9); /* main-bg con transparencia */
-    backdrop-filter: blur(10px);
-    border-top: 2px solid var(--neon-blue);
-    box-shadow: var(--shadow-blue);
-    z-index: 1000;
+/* Estilos para la sección de Ajustes */
+.settings-form-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
-.bottom-nav .nav-item {
-    flex: 1; /* Distribución equitativa */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 5px;
-    color: var(--text-color-dark);
-    font-size: 0.75em;
-    text-align: center;
-    gap: 4px;
-    transition: color 0.3s ease;
-    border: none; /* Reset para el botón */
-    background: none; /* Reset para el botón */
-    cursor: pointer;
-}
-
-.bottom-nav .nav-item i {
-    font-size: 1.4em; /* Iconos más grandes */
-}
-
-.bottom-nav .nav-item:hover {
-    color: var(--neon-blue);
-}
-
-.bottom-nav .nav-item.active {
-    color: var(--neon-green);
-    text-shadow: 0 0 8px var(--neon-green);
-}
-
-.bottom-nav .logout {
+.settings-form-container h4 {
     color: var(--neon-pink);
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
 }
 
-.desktop-nav { display: none; } /* Oculta la nav de escritorio por defecto */
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color-dark);
+}
+
+.neon-input-field {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--main-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    color: var(--text-color-light);
+}
+
+.setting-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+.toggle-switch input { display: none; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--main-bg-color);
+    border: 1px solid var(--text-color-dark);
+    border-radius: 28px;
+    transition: .4s;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-color-dark);
+    border-radius: 50%;
+    transition: .4s;
+}
+input:checked + .slider {
+    background-color: var(--neon-green);
+    border-color: var(--neon-green);
+}
+input:checked + .slider:before {
+    background-color: var(--main-bg-color);
+    transform: translateX(22px);
+}
 
 /* Media Queries para Responsividad */
 
@@ -417,22 +359,6 @@
 @media (min-width: 769px) {
     .mobile-nav { display: none; } /* Oculta la nav móvil */
     .desktop-nav { display: flex; } /* Muestra la nav de escritorio */
-
-    .dashboard-container {
-        flex-direction: row; /* Layout de dos columnas */
-        gap: 30px;
-        padding: 30px 0;
-    }
-
-    .dashboard-sidebar {
-        flex: 0 0 250px; /* Ancho fijo para la sidebar */
-        gap: 20px;
-    }
-
-    .dashboard-title {
-        font-size: 2.5em;
-    }
-
     .stats-grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
