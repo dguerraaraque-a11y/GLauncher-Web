@@ -10,7 +10,11 @@
     <link rel="stylesheet" href="/css/styles.css"> 
 </head>
 <body>
-
+    <!-- Spinner de Carga, Notificaciones y Pantalla Offline -->
+    <div id="loader-overlay" class="loader-overlay"><div class="spinner"></div></div>
+    <div id="notification-container"></div>
+    <div id="offline-overlay" class="offline-overlay"><div class="offline-content"><i class="fas fa-wifi"></i><h2>Sin Conexión</h2><p>Revisa tu red e inténtalo de nuevo.</p></div></div>
+    
     <header class="header">
         <div class="logo-container">
             <img src="/images/glauncher logo.png" alt="Logo de GLauncher" class="logo">
@@ -18,7 +22,7 @@
         </div>
         <nav class="auth-buttons">
             <a href="radio.html" class="auth-button">Radio</a> 
-            <a href="index.html" class="auth-button active">Inicio</a> 
+            <a href="index.html" class="auth-button">Inicio</a> 
             <a href="noticias.html" class="auth-button">Noticias</a>
             <a href="download.html" class="auth-button">Descargas</a>
             <a href="dashboard.html" class="auth-button">Dashboard</a>
