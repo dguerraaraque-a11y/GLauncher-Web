@@ -1,11 +1,11 @@
 /*
  * ==================================================================================
  * GLAUNCHER - ESTILOS ESPECÍFICOS PARA LA PÁGINA DE REGISTRO (REGISTER.HTML)
- * v2.0 - Remodelado
+ * v2.1 - Restaurado
  * ==================================================================================
  */
 
-/* Este archivo ahora puede estar vacío porque los estilos de login y registro
- * se han unificado en `login-styles.css` para mantener la consistencia.
- * Ambos archivos (login.html y register.html) deben enlazar a `login-styles.css`.
+/*
+ * NOTA: Estos estilos son una copia de login-styles.css para asegurar que la página
+ * de registro tenga una apariencia consistente y funcione de forma independiente.
  */
