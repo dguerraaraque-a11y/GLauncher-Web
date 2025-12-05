@@ -5,6 +5,25 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ========================================================
+    // 0. LÓGICA DEL BANNER DE COOKIES
+    // ========================================================
+    const cookieBanner = document.getElementById('cookie-banner');
+    const acceptCookieBtn = document.getElementById('accept-cookie-btn');
+
+    // Comprobar si el usuario ya aceptó las cookies
+    if (!localStorage.getItem('glauncher_cookies_accepted')) {
+        cookieBanner?.classList.add('visible');
+    }
+
+    acceptCookieBtn?.addEventListener('click', () => {
+        // Guardar la preferencia en localStorage
+        localStorage.setItem('glauncher_cookies_accepted', 'true');
+        // Ocultar el banner
+        cookieBanner.classList.remove('visible');
+    });
+
+
+    // ========================================================
     // 1. SISTEMA DE CARGA, NOTIFICACIONES Y OFFLINE
     // ========================================================
 

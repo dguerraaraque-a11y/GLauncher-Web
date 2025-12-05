@@ -34,12 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 // Si no está autenticado, redirigir al login
-                // window.location.href = "login.html"; // Redirección desactivada temporalmente para diseño de GUI
+                window.location.href = "login.html"; // Redirección activada
             }
         } catch (error) {
             console.error("Error al verificar la sesión:", error);
             // En caso de error de red o servidor, también redirigir al login
-            // window.location.href = "login.html"; // Redirección desactivada temporalmente para diseño de GUI
+            window.location.href = "login.html"; // Redirección activada
         }
     }
 

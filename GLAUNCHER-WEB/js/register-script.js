@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
         delete data.confirm_password; // No necesitamos enviar esto al backend
 
         try {
-            const response = await fetch(`
+            const response = await fetch(`https://glauncher-api.onrender.com/register`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
                 credentials: 'include' // Importante para manejar sesiones/cookies
