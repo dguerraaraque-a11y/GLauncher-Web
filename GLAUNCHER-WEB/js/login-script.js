@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 // Si la respuesta es OK, significa que el usuario ya está logueado.
                 // Lo redirigimos al dashboard.
-                window.location.href = "/dashboard";
+                window.location.href = "dashboard.html";
             }
             // Si la respuesta no es OK (ej. 401), no hacemos nada y dejamos que el usuario inicie sesión.
         } catch (error) {
