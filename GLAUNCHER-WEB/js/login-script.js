@@ -5,10 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const verifyCodeButton = document.getElementById('verify-code-button');
     const goBackLink = document.getElementById('go-back-login');
     
-    // Mostrar mensaje si se redirige desde el panel de admin
+    // --- Lógica para mostrar mensajes basados en la URL ---
     const urlParams = new URLSearchParams(window.location.search);
     const reason = urlParams.get('reason');
-    if (reason === 'login_required') {
+    const status = urlParams.get('status');
+
+    if (status === 'registered') {
+        window.showNotification('¡Registro exitoso! Ahora puedes iniciar sesión.', 'success');
+    } else if (reason === 'login_required') {
         window.showNotification('Debes iniciar sesión para acceder a esa página.', 'info');
     } else if (reason === 'admin_required') {
         window.showNotification('Acceso denegado. Necesitas permisos de administrador.', 'error');
@@ -35,13 +39,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Enviar credenciales al backend
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const submitButton = credentialsSection.querySelector('button[type="submit"]');
 
         const formData = new FormData(loginForm);
-        // Creamos el objeto de datos manualmente para enviar solo lo necesario.
         const data = {
             username: formData.get('username'),
             password: formData.get('password')
         };
+
+        if (!data.username || !data.password) {
+            window.showNotification('El usuario y la contraseña no pueden estar vacíos.', 'error');
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
 
         try {
             const response = await fetch(`https://glauncher-api.onrender.com/login`, {
@@ -60,13 +72,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.showNotification(result.message || 'Error desconocido.', 'error');
             }
         } catch (error) {
-            window.showNotification('Error de conexión con el servidor.', 'error');
+            window.showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-chevron-right"></i> Continuar';
         }
     });
 
     // 2. Enviar código 2FA al backend
     verifyCodeButton.addEventListener('click', async () => {
         const code = document.getElementById('security-code').value;
+        if (!/^\d{6}$/.test(code)) {
+            window.showNotification('El código de seguridad debe tener 6 dígitos.', 'error');
+            return;
+        }
+
+        verifyCodeButton.disabled = true;
+        verifyCodeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
 
         try {
             const response = await fetch(`https://glauncher-api.onrender.com/verify-code`, {
@@ -85,7 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.showNotification(result.message || 'Error desconocido.', 'error');
             }
         } catch (error) {
-            window.showNotification('Error de conexión con el servidor.', 'error');
+            window.showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
+        } finally {
+            verifyCodeButton.disabled = false;
+            verifyCodeButton.innerHTML = 'Verificar y Acceder';
         }
     });
 

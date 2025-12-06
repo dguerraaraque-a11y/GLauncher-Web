@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 window.showNotification(result.message, 'success');
                 setTimeout(() => {
-                    window.location.href = "login.html"; // Redirigir al login
+                    window.location.href = "login.html?status=registered"; // Redirigir al login con un mensaje de éxito
                 }, 2000);
             } else {
                 window.showNotification(result.message || 'Error desconocido.', 'error');
