@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLauncher | Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css"> 
+    <link rel="stylesheet" href="css/dashboard-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/glauncher logo.png">
+</head>
+<body>
+    <!-- Spinner de Carga, Notificaciones y Pantalla Offline -->
+    <div id="notification-container"></div>
+    <div id="offline-overlay" class="offline-overlay"><div class="offline-content"><i class="fas fa-wifi"></i><h2>Sin Conexión</h2><p>Revisa tu red e inténtalo de nuevo.</p></div></div>
+
+
+        <header class="header">
+        <div class="logo-container">
+            <img src="images/glauncher logo.png" alt="Logo de GLauncher" class="logo">
+            <h1>GLauncher</h1>
+        </div>
+        <nav class="auth-buttons">
+        <nav class="auth-buttons">
+            <a href="radio.html" class="auth-button">Radio</a> 
+            <a href="index.html" class="auth-button active">Inicio</a> 
+            <a href="noticias.html" class="auth-button">Noticias</a>
+            <a href="shop.html" class="auth-button">Tienda</a>
+            <a href="download.html" class="auth-button">Descargas</a>
+            <a href="dashboard.html" class="auth-button">Dashboard</a>
+            <a href="login.html" class="auth-button">Iniciar Sesión</a>
+            <a href="register.html" class="auth-button">Registrar</a>
+            <a href="https://www.youtube.com/@DaniCraftYT25" target="_blank" class="auth-button youtube-button" title="Visita mi canal de YouTube">
+                <i class="fab fa-youtube"></i> Canal
+            </a>
+        </nav>
+    </header>
+
+    <main class="dashboard-main-content">
+        <div class="dashboard-container">
+            
+            <!-- Nueva Barra de Navegación Flotante -->
+            <nav class="floating-nav">
+                <div class="nav-profile-section">
+                    <img id="nav-avatar" src="images/avatars/default-avatar.png" alt="Avatar" class="nav-avatar">
+                    <span id="nav-username">Cargando...</span>
+                    <div id="user-role-container" class="user-role-container" style="display: none;">
+                        <i class="fas fa-gem"></i> <!-- Icono por defecto, se cambiará con JS -->
+                        <span id="user-role"></span>
+                    </div>
+                    <!-- Contenedor para usuario no logueado -->
+                    <div id="nav-guest-section" class="nav-guest-section" style="display: none;">
+                        <span>¡Bienvenido, Invitado!</span>
+                        <p>Inicia sesión para ver tu perfil y estadísticas.</p>
+                        <a href="/login.html" class="action-btn">Iniciar Sesión</a>
+                    </div>
+                </div>
+                <div class="nav-links-section">
+                    <a href="#" class="floating-nav-item active" data-target="gchat-section"><i class="fas fa-comments"></i> GChat</a>
+                    <a href="#" class="floating-nav-item" data-target="friends-section"><i class="fas fa-user-friends"></i> Amigos</a>
+                    <a href="#" class="floating-nav-item" data-target="skins-section"><i class="fas fa-paint-brush"></i> Skins</a>
+                    <a href="#" class="floating-nav-item" data-target="stats-section"><i class="fas fa-chart-line"></i> Estadísticas</a>
+                    <a href="#" class="floating-nav-item" data-target="settings-section"><i class="fas fa-cogs"></i> Ajustes</a>
+                    <a href="/admin" id="admin-nav-button" class="floating-nav-item" style="display: none;"><i class="fas fa-user-shield"></i> Admin</a>
+                </div>
+                <div class="nav-actions-section">
+                    <button id="launch-game-btn" class="launch-button"><i class="fas fa-play"></i> Iniciar Juego</button>
+                    <button id="logout-btn" class="logout-button" title="Cerrar Sesión"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </nav>
+            
+            <section class="dashboard-content-area">
+                <!-- SECCIÓN DE GCHAT (NUEVA) -->
+                <section id="gchat-section" class="content-section active">
+                    <header class="section-header"><i class="fas fa-comments"></i> GChat - Mensajería</header>
+                    <div class="placeholder-content">
+                        <i class="fas fa-comments placeholder-icon"></i>
+                        <h3>El chat de GLauncher está en desarrollo</h3>
+                        <p>Próximamente podrás chatear con tus amigos, crear grupos, hacer videollamadas y mucho más.</p>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN DE AMIGOS (NUEVA) -->
+                <section id="friends-section" class="content-section">
+                    <header class="section-header"><i class="fas fa-user-friends"></i> Amigos</header>
+                    <div class="placeholder-content">
+                        <i class="fas fa-user-friends placeholder-icon"></i>
+                        <h3>Sistema de Amigos</h3>
+                        <p>Aquí podrás buscar, añadir y aceptar solicitudes de amistad. También verás el estado de conexión de tus amigos.</p>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN DE SKINS (NUEVA) -->
+                <section id="skins-section" class="content-section">
+                    <header class="section-header"><i class="fas fa-paint-brush"></i> Gestor de Skins</header>
+                    <div class="placeholder-content">
+                        <i class="fas fa-paint-brush placeholder-icon"></i>
+                        <h3>Visualizador y Gestor de Skins 3D</h3>
+                        <p>Importa tus skins, visualízalas en 3D y adminístralas en una lista personalizada. ¡Función en desarrollo!</p>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN DE ESTADÍSTICAS (EXISTENTE) -->
+                <section id="stats-section" class="content-section">
+                    <header class="section-header"><i class="fas fa-database"></i> Registros y Analítica</header>
+                    <div class="stats-grid">
+                        <div class="stat-card stat-hacker stat-pink animated-card">
+                            <i class="fas fa-clock"></i>
+                            <p class="stat-main-value">0h 0m</p>
+                            <p class="text-color-dark">Tiempo de Juego Total</p>
+                        </div>
+                        <div class="stat-card stat-hacker stat-blue animated-card">
+                            <i class="fas fa-cubes"></i>
+                            <p class="stat-main-value">0</p>
+                            <p class="text-color-dark">Bloques Minados</p>
+                        </div>
+                        <div class="stat-card stat-hacker stat-green animated-card">
+                            <i class="fas fa-bug"></i>
+                            <p class="stat-main-value">0</p>
+                            <p class="text-color-dark">Errores Reportados</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN DE AJUSTES (MEJORADA) -->
+                <section id="settings-section" class="content-section">
+                    <header class="section-header"><i class="fas fa-cogs"></i> Ajustes de Cuenta</header>
+                    <div class="settings-form-container">
+                        <form id="account-settings-form">
+                            <h4><i class="fas fa-user-edit"></i> Perfil</h4>
+                            <div class="form-group">
+                                <label for="username-change">Cambiar nombre de usuario</label>
+                                <input type="text" id="username-change" name="username" class="neon-input-field" placeholder="Nuevo nombre...">
+                            </div>
+                            <button type="submit" class="action-btn save-btn">Guardar Cambios</button>
+                        </form>
+
+                        <form id="privacy-settings-form">
+                            <h4><i class="fas fa-user-secret"></i> Privacidad</h4>
+                            <div class="setting-toggle">
+                                <label for="show-online-status">Mostrar mi estado de conexión a mis amigos</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="show-online-status" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-toggle">
+                                <label for="allow-friend-requests">Permitir solicitudes de amistad de cualquiera</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="allow-friend-requests" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </main>
+
+    <!-- Banner de Consentimiento de Cookies -->
+    <div id="cookie-banner" class="cookie-consent-banner">
+        <p class="cookie-text">
+            Utilizamos cookies para mejorar tu experiencia en nuestro sitio. Al continuar, aceptas nuestro uso de cookies. <a href="/privacy-policy.html">Leer más</a>.
+        </p>
+        <button id="accept-cookie-btn" class="auth-button-action cookie-accept-btn" style="background-color: var(--neon-green); box-shadow: var(--shadow-green);">Aceptar</button>
+    </div>
+
+    <script src="js/dashboard-script.js"></script>
+</body>
+</html>
