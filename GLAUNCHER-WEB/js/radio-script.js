@@ -1,23 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     const BACKEND_URL = 'https://glauncher-api.onrender.com';
-    // Clave PÚBLICA de Pusher. Es seguro tenerla en el frontend.
     const PUSHER_KEY = 'a2fb8d4323a44da53c63'; 
     const PUSHER_CLUSTER = 'us2';
 
-    const tabButtons = document.querySelectorAll('.prog-tab-button');
-    const tabContents = document.querySelectorAll('.prog-tab-content');
-
-    // --- Lógica de Pestañas de Programación ---
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            button.classList.add('active');
-            const tabId = button.dataset.tab;
-            const activeTabContent = document.getElementById(tabId);
-            activeTabContent.classList.add('active');
-        });
-    });
+    // --- Elementos del DOM ---
+    const chatMessages = document.getElementById('chat-messages');
+    const chatUsername = document.getElementById('chat-username');
+    const chatMessageInput = document.getElementById('chat-message-input');
+    const usernameColorInput = document.getElementById('username-color-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const userCountElement = document.getElementById('user-count');
+    const emojiBtn = document.getElementById('emoji-btn');
+    const pickerContainer = document.getElementById('picker-container');
+    const notificationSound = document.getElementById('chat-notification-sound');
 
     // --- Lógica para resaltar el programa actual ---
     function highlightCurrentProgram() {
@@ -44,196 +39,178 @@ document.addEventListener('DOMContentLoaded', () => {
             const endTime = card.dataset.end;
 
             const isToday = days.includes(currentDay);
-            let isTime = false;
+            const isTime = (startTime > endTime) ? (currentTime >= startTime || currentTime < endTime) : (currentTime >= startTime && currentTime < endTime);
 
-            if (startTime > endTime) { 
-                isTime = (currentTime >= startTime && currentTime <= '23:59') || (currentTime >= '00:00' && currentTime < endTime);
-            } else {
-                isTime = currentTime >= startTime && currentTime < endTime;
-            }
-
-            if (isToday && isTime) {
-                card.classList.add('is-live');
-            }
+            if (isToday && isTime) card.classList.add('is-live');
         });
     }
 
-    highlightCurrentProgram();
-    setInterval(highlightCurrentProgram, 60000);
+    // --- Lógica de Pestañas (Programación y Panel de Emojis) ---
+    function setupTabs(tabContainerSelector, contentContainerSelector) {
+        const tabButtons = document.querySelectorAll(`${tabContainerSelector} .prog-tab-button, ${tabContainerSelector} .picker-tab-btn`);
+        const tabContents = document.querySelectorAll(`${contentContainerSelector} .prog-tab-content, ${contentContainerSelector} .picker-tab-content`);
 
-    // ========================================================
-    // LÓGICA DEL CHAT
-    // ========================================================
-    const chatMessages = document.getElementById('chat-messages');
-    const usernameInput = document.getElementById('chat-username');
-    const messageInput = document.getElementById('chat-message-input');
-    const sendButton = document.getElementById('send-chat-btn');
-    const emojiButton = document.getElementById('emoji-btn');
-    const pickerContainer = document.getElementById('picker-container');
-    const notificationSound = document.getElementById('chat-notification-sound');
-    let lastTimestamp = new Date(0).toISOString();
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.tab;
 
-    // --- INICIALIZACIÓN DE PUSHER ---
-    try {
-        const pusher = new Pusher(PUSHER_KEY, {
-            cluster: PUSHER_CLUSTER,
-            encrypted: true
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === targetId) {
+                        content.classList.add('active');
+                    }
+                });
+            });
         });
-
-        const channel = pusher.subscribe('chat_radio');
-        channel.bind('new_message', function(data) {
-            // Cuando llega un nuevo mensaje, lo añadimos al chat
-            addMessageToDOM(data);
-            // Reproducir sonido solo si el mensaje no es nuestro
-            if (notificationSound && data.username !== (localStorage.getItem('glauncher_chat_username') || '')) {
-                notificationSound.volume = 0.5;
-                notificationSound.currentTime = 0;
-                notificationSound.play().catch(e => console.warn("No se pudo reproducir sonido de notificación"));
-            }
-        });
-    } catch (error) {
-        console.error("Error al inicializar Pusher:", error);
-        addMessageToDOM({ username: 'Sistema', content: 'Error de conexión con el chat en tiempo real.', type: 'system', timestamp: new Date().toISOString() }, 'error');
     }
 
-    // Lista de palabras para el filtro de profanidad
-    const FORBIDDEN_WORDS = [
-        "puta", "mierda", "cabron", "joder", "gilipollas", "coño", "polla", "pene", "cojones", "zorra", "maricon", "idiota", "estupido", "tonto", "fuck", "shit", "bitch", "asshole", "cunt", "dick", "pussy", "bastard", "motherfucker",
-        "mamahuevo", "guevo", "pajuo", "malparido", "hijueputa", "verga", "concha tu madre", "weon", "huevon", "boludo", "pendejo"
-    ];
+    setupTabs('.radio-prog-tabs', '.programming-section');
+    setupTabs('.picker-tabs', '.picker-content');
 
-    function filterProfanity(text) {
-        const regex = new RegExp(FORBIDDEN_WORDS.join('|'), 'gi');
-        return text.replace(regex, match => '*'.repeat(match.length));
+    // --- Lógica del Chat ---
+
+    // Cargar nombre de usuario y color guardados
+    if (localStorage.getItem('glauncher_chat_username')) {
+        chatUsername.value = localStorage.getItem('glauncher_chat_username');
+    }
+    if (localStorage.getItem('glauncher_chat_color')) {
+        usernameColorInput.value = localStorage.getItem('glauncher_chat_color');
     }
 
-    usernameInput.value = localStorage.getItem('glauncher_chat_username') || '';
+    chatUsername.addEventListener('change', () => localStorage.setItem('glauncher_chat_username', chatUsername.value));
+    usernameColorInput.addEventListener('input', () => localStorage.setItem('glauncher_chat_color', usernameColorInput.value));
 
-    function escapeHTML(str) {
-        return str.replace(/[&<>"']/g, match => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[match]));
+    const roleIcons = {
+        "Pico de Netherite": "images/Rols/Pico de Netherite.png", "Pico de Diamante": "images/Rols/Pico de Diamante.png",
+        "Pico de Oro": "images/Rols/Pico de Oro.png", "Pico de Hierro": "images/Rols/Pico de Hierro.png",
+        "Pico de Piedra": "images/Rols/Pico de Piedra.png", "Pico de madera": "images/Rols/Pico de madera.png",
+        "Invitado": "images/Rols/Invitado.png"
+    };
+
+    function renderUsername(username, role, color) {
+        // Si el rol es 'system', no se renderiza nada más que el nombre.
+        if (role === 'system') return `<strong>${username}</strong>`;
+
+        const roleClass = 'role-' + role.toLowerCase().replace(/ /g, '-');
+        const iconSrc = roleIcons[role] || roleIcons["Invitado"];
+        const style = color ? `style="color: ${color};"` : '';
+        let roleHtml = (role !== 'Invitado' && role !== 'Pico de madera') ? `<span class="user-role-badge ${roleClass}"><img src="${iconSrc}" class="role-icon" alt="${role}"> ${role}</span>` : '';
+        return `<strong class="username-text ${roleClass}" ${style}>${username}</strong>${roleHtml}`;
     }
 
-    function addMessageToDOM(msg) {
-        const { username, content, type, timestamp } = msg;
-        const user = username.trim() || 'Anónimo';
+    function addChatMessage(msg) {
         const messageElement = document.createElement('div');
-        messageElement.classList.add('chat-message', 'user');
-        const formattedTime = new Date(timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        const timestampHTML = `<span class="chat-timestamp">${formattedTime}</span>`;
-        let messageContentHTML;
-
-        if (type === 'gif') {
-            messageContentHTML = `<strong>${escapeHTML(user)}:</strong><br><img src="${content}" alt="GIF" class="chat-gif">`;
-        } else {
-            const processedContent = escapeHTML(content).replace(/@(\w+)/g, '<span class="chat-mention">@$1</span>');
-            messageContentHTML = `<strong>${escapeHTML(user)}:</strong> ${processedContent}`;
-        }
-        messageElement.innerHTML = `<p>${timestampHTML} ${messageContentHTML}</p>`;
+        messageElement.className = `chat-message ${msg.username === 'Sistema' ? 'system' : ''}`;
+        const contentHTML = msg.type === 'gif' ? `<img src="${msg.content}" alt="GIF" class="chat-gif">` : msg.content;
+        messageElement.innerHTML = `<p>${renderUsername(msg.username, msg.role, msg.username_color)}: ${contentHTML}</p>`;
         chatMessages.appendChild(messageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
 
-    async function saveAndSendMessage(content, type = 'text') {
-        let username = usernameInput.value.trim();
-        if (!username) username = 'Anónimo';
-        localStorage.setItem('glauncher_chat_username', username);
-
-        const finalContent = type === 'text' ? filterProfanity(content) : content;
-        const newMessage = { username, content: finalContent, type };
-
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/chat_messages/create`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newMessage),
-                credentials: 'include'
-            });
-
-            if (response.ok) {
-                if (type === 'text') messageInput.value = '';
-                toggleSendButton();
-            } else {
-                console.error('Error al enviar el mensaje');
-            }
-        } catch (error) {
-            console.error('Error de red al enviar el mensaje:', error);
+        if (chatUsername.value !== msg.username && notificationSound) {
+            notificationSound.play().catch(e => console.warn("No se pudo reproducir el sonido de notificación."));
         }
     }
 
-    async function fetchInitialMessages() {
-        chatMessages.innerHTML = '<div class="chat-message system"><p>Cargando mensajes...</p></div>';
+    async function loadInitialMessages() {
+        // Limpiar el contenedor de mensajes antes de intentar cargar los nuevos.
+        chatMessages.innerHTML = '';
         try {
             const response = await fetch(`${BACKEND_URL}/api/chat_messages`);
-            if (!response.ok) throw new Error('No se pudieron cargar los mensajes.');
-            
-            const messages = await response.json();
-            chatMessages.innerHTML = '';
-            messages.forEach(addMessageToDOM);
-            if (messages.length > 0) {
-                lastTimestamp = messages[messages.length - 1].timestamp;
+            if (!response.ok) {
+                throw new Error(`Error del servidor: ${response.status}`);
             }
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            const messages = await response.json();
+            messages.forEach(addChatMessage);
         } catch (error) {
-            console.error("Error al cargar los mensajes iniciales:", error);
-            chatMessages.innerHTML = '<div class="chat-message system"><p>Error al cargar el chat. Inténtalo de nuevo más tarde.</p></div>';
+            console.error("Error al cargar el historial del chat:", error);
+            addChatMessage({ username: 'Sistema', content: 'Error al cargar el historial del chat. Inténtalo de nuevo más tarde.', type: 'text', role: 'system' });
         }
     }
 
-    function toggleSendButton() {
-        sendButton.disabled = messageInput.value.trim() === '';
+    async function sendMessage(contentOverride = null, type = 'text') {
+        const username = chatUsername.value.trim();
+        const content = contentOverride || chatMessageInput.value.trim();
+        const color = usernameColorInput.value;
+
+        if (!username) return window.showNotification('Por favor, introduce un nombre de usuario.', 'error');
+        if (!content) return window.showNotification('El mensaje no puede estar vacío.', 'error');
+
+        sendChatBtn.disabled = true;
+        sendChatBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        const headers = { 'Content-Type': 'application/json' };
+        const token = localStorage.getItem('glauncher_token');
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        try {
+            await fetch(`${BACKEND_URL}/api/chat_messages/create`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ username, content, type, color })
+            });
+            if (type === 'text') chatMessageInput.value = '';
+        } catch (error) {
+            window.showNotification('Error al enviar el mensaje.', 'error');
+        } finally {
+            sendChatBtn.disabled = false;
+            sendChatBtn.innerHTML = 'Enviar <i class="fas fa-paper-plane"></i>';
+        }
     }
 
-    sendButton.addEventListener('click', () => saveAndSendMessage(messageInput.value, 'text'));
-    messageInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            if (!sendButton.disabled) sendButton.click();
+    sendChatBtn.addEventListener('click', () => sendMessage());
+    chatMessageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+    });
+
+    // --- Lógica de Pusher para tiempo real ---
+    const authHeaders = {};
+    const token = localStorage.getItem('glauncher_token');
+    if (token) authHeaders['Authorization'] = `Bearer ${token}`;
+
+    const pusher = new Pusher(PUSHER_KEY, {
+        cluster: PUSHER_CLUSTER,
+        authEndpoint: `${BACKEND_URL}/pusher/auth`,
+        auth: { headers: authHeaders }
+    });
+
+    const presenceChannel = pusher.subscribe('presence-chat_radio');
+
+    const updateUserCount = () => {
+        userCountElement.innerHTML = `<i class="fas fa-circle"></i> ${presenceChannel.members.count} usuarios en línea`;
+    };
+
+    presenceChannel.bind('pusher:subscription_succeeded', updateUserCount);
+    presenceChannel.bind('pusher:member_added', updateUserCount);
+    presenceChannel.bind('pusher:member_removed', updateUserCount);
+    presenceChannel.bind('new_message', addChatMessage);
+
+    // --- Lógica del Panel de Emojis/GIFs/Memes ---
+    emojiBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pickerContainer.classList.toggle('visible');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!pickerContainer.contains(e.target) && !emojiBtn.contains(e.target)) {
+            pickerContainer.classList.remove('visible');
         }
     });
-    messageInput.addEventListener('input', toggleSendButton);
-    toggleSendButton();
 
-    // --- Lógica del Panel de Emojis y GIFs ---
+    document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+        chatMessageInput.value += event.detail.unicode;
+    });
+
     const TENOR_API_KEY = "LIVDSRZULELA";
-    const emojiPicker = document.querySelector('emoji-picker');
-    const pickerTabs = document.querySelectorAll('.picker-tab-btn');
     const gifSearchInput = document.getElementById('gif-search-input');
     const gifResultsContainer = document.getElementById('gif-results');
-
-    emojiButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        pickerContainer.classList.toggle('show');
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!pickerContainer.contains(event.target) && !emojiButton.contains(event.target)) {
-            pickerContainer.classList.remove('show');
-        }
-    });
-
-    pickerTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            pickerTabs.forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.picker-tab-content').forEach(c => c.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.tab).classList.add('active');
-            if (tab.dataset.tab === 'gifs' && gifResultsContainer.childElementCount <= 1) {
-                loadTrendingGifs();
-            }
-        });
-    });
-
-    emojiPicker.addEventListener('emoji-click', event => {
-        messageInput.value += event.detail.unicode;
-        messageInput.focus();
-    });
-
+    
     async function loadTrendingGifs() {
         gifResultsContainer.innerHTML = '<p class="gif-placeholder">Cargando GIFs populares...</p>';
         try {
-            const response = await fetch(`https://g.tenor.com/v1/trending?key=${TENOR_API_KEY}&limit=21&media_filter=minimal`);
+            const response = await fetch(`https://g.tenor.com/v1/trending?key=${TENOR_API_KEY}&limit=48&media_filter=minimal`);
             renderGifs(await response.json());
         } catch (error) {
             gifResultsContainer.innerHTML = '<p class="gif-placeholder">No se pudieron cargar los GIFs.</p>';
@@ -251,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             gifResultsContainer.innerHTML = '<p class="gif-placeholder">Buscando...</p>';
             try {
-                const response = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=21&media_filter=minimal`);
+                const response = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=48&media_filter=minimal`);
                 renderGifs(await response.json());
             } catch (error) {
                 gifResultsContainer.innerHTML = '<p class="gif-placeholder">Error al conectar con Tenor.</p>';
@@ -267,8 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.src = gif.media[0].tinygif.url;
                 img.alt = gif.content_description;
                 img.addEventListener('click', () => {
-                    saveAndSendMessage(gif.media[0].gif.url, 'gif');
-                    pickerContainer.classList.remove('show');
+                    sendMessage(gif.media[0].gif.url, 'gif'); // Enviar GIF
+                    pickerContainer.classList.remove('visible');
                 });
                 gifResultsContainer.appendChild(img);
             });
@@ -277,12 +254,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    document.getElementById('meme-list').addEventListener('click', (e) => {
-        if (e.target.classList.contains('meme-emoji')) {
-            saveAndSendMessage(e.target.src, 'gif');
-            pickerContainer.classList.remove('show');
+    // Cargar GIFs populares al abrir la pestaña por primera vez
+    document.querySelector('[data-tab="gifs"]').addEventListener('click', () => {
+        if (gifResultsContainer.childElementCount <= 1) {
+            loadTrendingGifs();
         }
     });
 
-    fetchInitialMessages();
+    // --- Inicialización ---
+    loadInitialMessages();
+    highlightCurrentProgram();
+    setInterval(highlightCurrentProgram, 60000);
 });
+
+/*
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            button.classList.add('active');
+            const tabId = button.dataset.tab;
+            const activeTabContent = document.getElementById(tabId);
+            activeTabContent.classList.add('active');
+        });
+    });
+*/

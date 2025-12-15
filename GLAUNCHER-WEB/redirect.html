@@ -34,9 +34,21 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        localStorage.setItem('glauncher_token', token);
-        window.location.href = 'https://glauncher.vercel.app/register-complete.html';
+        const loginToken = urlParams.get('token');
+        const tempToken = urlParams.get('temp_token');
+
+        if (loginToken) {
+            // Si es un token de inicio de sesión, lo guardamos y vamos al dashboard.
+            localStorage.setItem('glauncher_token', loginToken);
+            window.location.href = 'https://glauncher.vercel.app/dashboard.html';
+        } else if (tempToken) {
+            // Si es un token temporal para completar registro, lo guardamos y vamos a esa página.
+            localStorage.setItem('glauncher_temp_token', tempToken);
+            window.location.href = 'https://glauncher.vercel.app/register-complete.html';
+        } else {
+            // Si no hay token, redirigir al login con un error.
+            window.location.href = 'https://glauncher.vercel.app/login.html?error=auth_failed';
+        }
     </script>
 </body>
 </html>

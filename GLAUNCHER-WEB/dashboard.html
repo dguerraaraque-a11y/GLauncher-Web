@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Accede a tu perfil de GLauncher. Gestiona tus amigos, cosméticos, logros, estadísticas y ajustes de cuenta en un solo lugar.">
     <title>GLauncher | Dashboard</title>
+    <!-- Estilos optimizados para carga asíncrona -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></noscript>
     <link rel="stylesheet" href="css/styles.css">  
     <link rel="stylesheet" href="css/dashboard-styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" type="image/png" href="images/glauncher logo.png">
 </head>
 <body>
@@ -47,6 +50,15 @@
                         <i class="fas fa-gem"></i> <!-- Icono por defecto, se cambiará con JS -->
                         <span id="user-role"></span>
                     </div>
+                    <!-- Nuevo Menú de Estado -->
+                    <div class="status-menu-container">
+                        <div id="status-display" class="status-display">
+                            <span id="status-indicator" class="status-indicator online"></span>
+                            <span id="status-text">Disponible</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div id="status-options" class="status-options"></div>
+                    </div>
                     <!-- Contenedor para usuario no logueado -->
                     <div id="nav-guest-section" class="nav-guest-section" style="display: none;">
                         <span>¡Bienvenido, Invitado!</span>
@@ -86,8 +98,15 @@
                                 <h3>Bienvenido a GChat</h3>
                                 <p>Selecciona una conversación para empezar a chatear.</p>
                             </div>
-                            <div id="gchat-messages-container" class="gchat-messages-container" style="display: none;"></div>
-                            <form id="gchat-input-form" class="gchat-input-form" style="display: none;"></form>
+                            <div id="gchat-messages-container" class="gchat-messages-container" style="display: none;">
+                                <!-- Los mensajes se cargarán aquí -->
+                            </div>
+                            <form id="gchat-input-form" class="gchat-input-form" style="display: none;">
+                                <input type="text" id="gchat-message-input" placeholder="Escribe un mensaje...">
+                                <button type="submit" class="action-btn">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </section>
@@ -220,7 +239,7 @@
         <button id="accept-cookie-btn" class="auth-button-action cookie-accept-btn" style="background-color: var(--neon-green); box-shadow: var(--shadow-green);">Aceptar</button>
     </div>
 
-    <script src="js/global-script.js"></script>
-    <script src="js/dashboard-script.js"></script>
+    <script src="js/global-script.js" defer></script>
+    <script src="js/dashboard-script.js" defer></script>
 </body>
 </html>

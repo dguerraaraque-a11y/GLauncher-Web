@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="GLauncher es el launcher de Minecraft definitivo, optimizado para PvP y rendimiento. Ofrece soporte para mods, multi-cuenta, cosméticos y mucho más.">
     <title>GLauncher - Inicio</title>
+    <!-- Estilos optimizados para carga asíncrona -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></noscript>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="icon" type="image/png" href="images/glauncher logo.png">
     <link rel="stylesheet" href="css/index-styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <!-- Librería para la animación de confeti -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -40,7 +43,7 @@
 
             <div id="christmas-countdown">
               <div class="countdown-header">
-                <h3>¿Cuánto falta para Navidad?</h3>
+                <h3 id="countdown-title">¿Cuánto falta para Navidad?</h3>
                 <button id="toggle-snow-btn" class="snow-toggle-btn" title="Activar/Desactivar Nieve"><i class="fas fa-snowflake"></i></button>
               </div>
               <p class="countdown-target-date" id="countdown-target-date">Para el 25 de Diciembre de 2025</p>
@@ -119,7 +122,7 @@
         <section class="about-section">
             <h2 class="section-title"><span>Sobre el Proyecto</span></h2>
             <div class="creator-info">
-                <img src="images/avatars/danicraftyt25.jpg" alt="Foto del Creador DaniCraftYT25" class="creator-img">
+                <img src="images/avatars/danicraftyt25.jpg" alt="Foto del Creador DaniCraftYT25" class="creator-img" loading="lazy">
                 <h3 class="main-headline" style="font-size: 1.8em; margin-bottom: 0;">DaniCraftYT25</h3>
                 <p class="project-description">Creador y Desarrollador Principal de GLauncher</p>
             </div>
@@ -137,8 +140,8 @@
             <div id="message-input-area" class="message-input-area">
                 <input type="text" id="message-username" class="neon-input-field" placeholder="Tu nombre..." maxlength="25">
                 <div class="textarea-container">
-                    <textarea id="launch-message-content" placeholder="Escribe tu mensaje aquí..." maxlength="200"></textarea>
-                    <button id="emoji-btn-wall" class="emoji-btn"><i class="fas fa-smile"></i></button>
+                    <textarea id="launch-message-content" class="neon-input-field" placeholder="Escribe tu mensaje aquí..." maxlength="200"></textarea>
+                    <button id="emoji-btn-wall" class="emoji-btn" aria-label="Abrir selector de emojis"><i class="fas fa-smile"></i></button>
                 </div>
                 <div id="picker-container-wall" class="picker-container">
                     <emoji-picker class="dark"></emoji-picker>
@@ -199,8 +202,8 @@
         <button id="accept-cookie-btn" class="auth-button-action cookie-accept-btn" style="background-color: var(--neon-green); box-shadow: var(--shadow-green);">Aceptar</button>
     </div>
 
-    <script src="js/global-script.js"></script>
+    <script src="js/global-script.js" defer></script>
     <!-- Scripts específicos para la página de inicio -->
-    <script src="js/index-script.js"></script>
+    <script src="js/index-script.js" defer></script>
 </body>
 </html>

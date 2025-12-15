@@ -34,11 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LOAD USER DATA ---
     async function loadUserData() {
+        const headers = { 'Authorization': `Bearer ${token}` };
         try {
-            const [userResponse, usersListResponse, cosmeticsResponse] = await Promise.all([
-                fetch(`${BACKEND_URL}/api/user_info`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${BACKEND_URL}/api/users`),
-                fetch(`${BACKEND_URL}/api/shop/items`)
+            const [userResponse, friendsResponse, cosmeticsResponse] = await Promise.all([
+                fetch(`${BACKEND_URL}/api/user_info`, { headers }),
+                fetch(`${BACKEND_URL}/api/friends`, { headers }),
+                fetch(`${BACKEND_URL}/api/shop/items`, { headers })
             ]);
 
             if (!userResponse.ok) {
@@ -50,17 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const userData = await userResponse.json();
-            const allUsers = await usersListResponse.json();
+            const friendsData = await friendsResponse.json();
             const allCosmetics = await cosmeticsResponse.json();
 
-            initializeRealtimeNotifications(userData);
+            initializeRealtimeNotifications(userData, friendsData);
             populateSidebar(userData);
             populateStats(userData);
-            renderFriendsList(allUsers);
-            setupFriendSearch(allUsers);
+            renderFriendsList(friendsData);
+            setupFriendSearch(userData.id, friendsData);
             // Pasamos userData a la inicialización de ajustes
             initializeSettings(userData);
             initializeAchievements(userData);
+            initializeStatusSystem(userData);
+            initializeGChat(userData, friendsData);
             renderSkinsInventory(userData.owned_cosmetics, allCosmetics);
 
         } catch (error) {
@@ -100,27 +103,144 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('stat-playtime').textContent = `${Math.floor(userData.play_time_seconds / 3600)}h`;
     }
 
-    function renderFriendsList(users) {
+    function renderFriendsList(friendsData) {
         const friendsListContainer = document.getElementById('friends-list');
         friendsListContainer.innerHTML = '';
+        const { friends, pending, sent } = friendsData;
 
-        if (!users || users.length === 0) {
-            friendsListContainer.innerHTML = '<p>No se encontraron usuarios.</p>';
-            return;
+        // Renderizar solicitudes pendientes
+        if (pending.length > 0) {
+            friendsListContainer.innerHTML += '<h4><i class="fas fa-inbox"></i> Solicitudes Pendientes</h4>';
+            pending.forEach(user => {
+                friendsListContainer.innerHTML += `
+                    <div class="friend-item" data-user-id="${user.id}" data-user-status="${user.status || 'Disponible'}">
+                        <img src="${user.avatar_url || DEFAULT_AVATAR_URL}" alt="Avatar" class="friend-avatar">
+                        <div class="friend-info">
+                            <span class="friend-name">
+                                <span class="status-indicator online"></span>
+                                ${user.username}
+                            </span>
+                            <span class="friend-role">${user.role}</span>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="action-btn accept-btn" title="Aceptar"><i class="fas fa-check"></i></button>
+                            <button class="action-btn remove-btn" title="Rechazar"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        users.forEach(user => {
-            const friendCard = document.createElement('div');
-            friendCard.className = 'friend-item';
-            friendCard.innerHTML = `
-                <img src="${user.avatar_url || DEFAULT_AVATAR_URL}" alt="Avatar de ${user.username}" class="friend-avatar">
-                <div class="friend-info">
-                    <span class="friend-name">${user.username}</span>
-                    <span class="friend-role">${user.role}</span>
-                </div>
-                <button class="action-btn add-friend-btn" title="Añadir Amigo"><i class="fas fa-user-plus"></i></button>
-            `;
-            friendsListContainer.appendChild(friendCard);
+        // Renderizar amigos
+        friendsListContainer.innerHTML += '<h4><i class="fas fa-user-friends"></i> Mis Amigos</h4>';
+        if (friends.length > 0) {
+            friends.forEach(user => {
+                friendsListContainer.innerHTML += `
+                    <div class="friend-item" data-user-id="${user.id}" data-user-status="${user.status || 'Disponible'}">
+                        <img src="${user.avatar_url || DEFAULT_AVATAR_URL}" alt="Avatar" class="friend-avatar">
+                        <div class="friend-info">
+                            <span class="friend-name">
+                                <span class="status-indicator online"></span>
+                                ${user.username}
+                            </span>
+                            <span class="friend-role">${user.role}</span>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="action-btn remove-btn" title="Eliminar Amigo"><i class="fas fa-user-minus"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            friendsListContainer.innerHTML += '<p class="placeholder-content">Aún no tienes amigos. ¡Busca a alguien!</p>';
+        }
+
+        // Renderizar solicitudes enviadas
+        if (sent.length > 0) {
+            friendsListContainer.innerHTML += '<h4><i class="fas fa-paper-plane"></i> Solicitudes Enviadas</h4>';
+            sent.forEach(user => {
+                friendsListContainer.innerHTML += `
+                    <div class="friend-item" data-user-id="${user.id}" data-user-status="${user.status || 'Disponible'}">
+                        <img src="${user.avatar_url || DEFAULT_AVATAR_URL}" alt="Avatar" class="friend-avatar">
+                        <div class="friend-info">
+                            <span class="friend-name">
+                                <span class="status-indicator online"></span>
+                                ${user.username}
+                            </span>
+                            <span class="friend-role">${user.role}</span>
+                        </div>
+                        <div class="friend-actions">
+                            <button class="action-btn remove-btn" title="Cancelar Solicitud"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        updateAllStatusIndicators();
+    }
+
+    // --- LÓGICA DE GESTIÓN DE AMIGOS ---
+    async function handleFriendAction(action, friendId) {
+        const urlMap = {
+            accept: `${BACKEND_URL}/api/friends/accept`,
+            remove: `${BACKEND_URL}/api/friends/remove`,
+            add: `${BACKEND_URL}/api/friends/add`,
+        };
+        const url = urlMap[action];
+        const body = action === 'add' ? { username: friendId } : { friend_id: friendId };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(body)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            window.showNotification(result.message, 'success');
+            // Recargar la lista de amigos para ver los cambios
+            const friendsResponse = await fetch(`${BACKEND_URL}/api/friends`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const friendsData = await friendsResponse.json();
+            renderFriendsList(friendsData);
+
+        } catch (error) {
+            window.showNotification(error.message, 'error');
+        }
+    }
+
+    document.getElementById('friends-list').addEventListener('click', (e) => {
+        const target = e.target.closest('.action-btn');
+        if (!target) return;
+
+        const friendItem = target.closest('.friend-item');
+        const friendId = friendItem.dataset.userId;
+
+        if (target.classList.contains('accept-btn')) {
+            handleFriendAction('accept', friendId);
+        } else if (target.classList.contains('remove-btn')) {
+            handleFriendAction('remove', friendId);
+        } else if (target.classList.contains('add-friend-btn')) {
+            // El botón de añadir viene de la búsqueda, el ID es el nombre de usuario
+            handleFriendAction('add', friendItem.dataset.username);
+        }
+    });
+
+    async function setupFriendSearch(currentUserId, friendsData) {
+        const searchInput = document.getElementById('friend-search-input');
+        const friendsListContainer = document.getElementById('friends-list');
+        const allUsersResponse = await fetch(`${BACKEND_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const allUsers = await allUsersResponse.json();
+
+        searchInput.addEventListener('keyup', () => {
+            const query = searchInput.value.toLowerCase();
+            if (query.length < 2) {
+                renderFriendsList(friendsData); // Si la búsqueda está vacía, mostrar la lista normal
+                return;
+            }
+            
+            const filteredUsers = allUsers.filter(user => user.username.toLowerCase().includes(query) && user.id !== currentUserId);
+            renderSearchResults(filteredUsers, friendsData);
         });
     }
 
@@ -130,6 +250,140 @@ document.addEventListener('DOMContentLoaded', () => {
             const query = searchInput.value.toLowerCase();
             const filteredUsers = allUsers.filter(user => user.username.toLowerCase().includes(query));
             renderFriendsList(filteredUsers);
+        });
+    }
+
+    // --- LÓGICA DE GCHAT (MENSAJERÍA PRIVADA) ---
+    function initializeGChat(userData, friendsData) {
+        const conversationList = document.getElementById('gchat-conversation-list');
+        const messagesContainer = document.getElementById('gchat-messages-container');
+        const inputForm = document.getElementById('gchat-input-form');
+        const chatHeader = document.getElementById('gchat-header-username');
+        const welcomeScreen = document.getElementById('gchat-welcome-screen');
+        let currentRecipient = null;
+        let chatChannel = null;
+
+        // 1. Poblar la lista de conversaciones con amigos
+        conversationList.innerHTML = '';
+        if (friendsData.friends.length > 0) {
+            friendsData.friends.forEach(friend => {
+                const convoItem = document.createElement('div');
+                convoItem.className = 'gchat-conversation-item';
+                convoItem.dataset.friendId = friend.id;
+                convoItem.dataset.friendName = friend.username;
+                convoItem.dataset.userStatus = friend.status || 'Disponible';
+                convoItem.innerHTML = `
+                    <img src="${friend.avatar_url || DEFAULT_AVATAR_URL}" alt="Avatar" class="friend-avatar">
+                    <div class="friend-info">
+                        <span class="friend-name">
+                            <span class="status-indicator online"></span>
+                            ${friend.username}
+                        </span>
+                    </div>
+                `;
+                conversationList.appendChild(convoItem);
+            });
+        } else {
+            conversationList.innerHTML = '<p class="placeholder-content">Agrega amigos para chatear.</p>';
+        }
+        updateAllStatusIndicators();
+
+        // 2. Manejar clic en una conversación
+        conversationList.addEventListener('click', async (e) => {
+            const target = e.target.closest('.gchat-conversation-item');
+            if (!target) return;
+
+            // Resaltar conversación activa
+            document.querySelectorAll('.gchat-conversation-item').forEach(item => item.classList.remove('active'));
+            target.classList.add('active');
+
+            const friendId = target.dataset.friendId;
+            const friendName = target.dataset.friendName;
+            currentRecipient = { id: friendId, username: friendName };
+
+            // Mostrar la ventana de chat
+            welcomeScreen.style.display = 'none';
+            messagesContainer.style.display = 'block';
+            inputForm.style.display = 'flex';
+            chatHeader.textContent = friendName;
+
+            // Cargar historial y suscribirse al canal
+            await loadChatHistory(friendId);
+            subscribeToChatChannel(userData.id, friendId);
+        });
+
+        // 3. Cargar historial de mensajes
+        async function loadChatHistory(friendId) {
+            messagesContainer.innerHTML = '<div class="spinner-container"><div class="spinner"></div></div>';
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/gchat/history/${friendId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const messages = await response.json();
+                messagesContainer.innerHTML = '';
+                messages.forEach(renderPrivateMessage);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } catch (error) {
+                messagesContainer.innerHTML = '<p class="placeholder-content">Error al cargar el historial.</p>';
+            }
+        }
+
+        // 4. Renderizar un mensaje privado
+        function renderPrivateMessage(msg) {
+            const messageEl = document.createElement('div');
+            const isSent = msg.sender_id === userData.id;
+            messageEl.className = `gchat-message ${isSent ? 'sent' : 'received'}`;
+            messageEl.innerHTML = `<p>${msg.content}</p>`;
+            messagesContainer.appendChild(messageEl);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 5. Suscribirse al canal de Pusher
+        function subscribeToChatChannel(userId, friendId) {
+            // Desuscribirse del canal anterior si existe
+            if (chatChannel) {
+                pusher.unsubscribe(chatChannel.name);
+            }
+
+            const channelName = `private-chat-${Math.min(userId, friendId)}-${Math.max(userId, friendId)}`;
+            chatChannel = pusher.subscribe(channelName);
+
+            chatChannel.bind('pusher:subscription_error', (status) => {
+                console.error(`Error al suscribirse al canal de GChat: ${status}`);
+                window.showNotification('Error de conexión con el chat en tiempo real.', 'error');
+            });
+
+            chatChannel.bind('new_message', (data) => {
+                // Solo renderizar si el mensaje pertenece a la conversación activa
+                if (currentRecipient && (data.sender_id == currentRecipient.id || data.recipient_id == currentRecipient.id)) {
+                    renderPrivateMessage(data);
+                } else {
+                    // Opcional: mostrar notificación de nuevo mensaje de otro chat
+                    window.showNotification(`Nuevo mensaje de otro chat.`, 'info');
+                }
+            });
+        }
+
+        // 6. Enviar un mensaje
+        inputForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('gchat-message-input');
+            const content = input.value.trim();
+
+            if (!content || !currentRecipient) return;
+
+            input.value = ''; // Limpiar el input inmediatamente
+
+            try {
+                await fetch(`${BACKEND_URL}/api/gchat/send/${currentRecipient.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ content })
+                });
+            } catch (error) {
+                window.showNotification('Error al enviar el mensaje.', 'error');
+                input.value = content; // Restaurar el mensaje si falla el envío
+            }
         });
     }
 
@@ -379,30 +633,100 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- LÓGICA DE NOTIFICACIONES EN TIEMPO REAL ---
-    function initializeRealtimeNotifications(userData) {
+    function initializeRealtimeNotifications(userData, friendsData) {
         const pusher = new Pusher(PUSHER_KEY, {
             cluster: 'us2',
             authEndpoint: `${BACKEND_URL}/pusher/auth`,
             auth: { headers: { 'Authorization': `Bearer ${token}` } }
         });
 
-        // Canal privado para notificaciones personales (solicitudes de amistad, etc.)
-        const privateChannel = pusher.subscribe(`private-user-${userData.id}`);
+        // Canal de presencia global para saber quién está online
+        const presenceChannel = pusher.subscribe('presence-glauncher-users');
+        const friendIds = new Set(friendsData.friends.map(f => f.id));
 
-        privateChannel.bind('pusher:subscription_error', (status) => {
-            console.error(`Error al suscribirse al canal privado: ${status}`);
-        });
-
-        privateChannel.bind('new-friend-request', (data) => {
-            window.showNotification(`📬 Nueva solicitud de amistad de: ${data.from_username}`, 'info');
-            // Aquí podrías añadir una lógica para refrescar la lista de amigos automáticamente
-        });
-
-        privateChannel.bind('new-gchat-message', (data) => {
-            // Solo mostrar notificación si la ventana de GChat no está activa
-            if (!document.getElementById('gchat-section').classList.contains('active')) {
-                window.showNotification(`💬 Nuevo mensaje de ${data.from_username}: "${data.content}"`, 'info');
+        presenceChannel.bind('pusher:member_added', (member) => {
+            // Notificar solo si el miembro añadido es un amigo y no soy yo mismo
+            if (friendIds.has(member.id) && member.id !== userData.id) {
+                window.showNotification(`🟢 ¡${member.info.username} se ha conectado!`, 'success');
             }
+        });
+
+        presenceChannel.bind('pusher:member_removed', (member) => {
+            // Notificar solo si el miembro que se va es un amigo
+            if (friendIds.has(member.id)) {
+                window.showNotification(`🔴 ¡${member.info.username} se ha desconectado!`, 'info');
+            }
+        });
+    }
+    
+    // --- LÓGICA DEL SISTEMA DE ESTADO ---
+    function initializeStatusSystem(userData) {
+        const statusDisplay = document.getElementById('status-display');
+        const statusOptionsContainer = document.getElementById('status-options');
+        const statuses = {
+            'Disponible': 'online',
+            'Ausente': 'away',
+            'Jugando': 'playing'
+        };
+
+        // Poblar opciones
+        statusOptionsContainer.innerHTML = Object.keys(statuses).map(status => 
+            `<div class="status-option" data-status="${status}">
+                <span class="status-indicator ${statuses[status]}"></span>
+                ${status}
+            </div>`
+        ).join('');
+
+        // Mostrar/ocultar menú
+        statusDisplay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            statusOptionsContainer.style.display = statusOptionsContainer.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // Cambiar estado
+        statusOptionsContainer.addEventListener('click', async (e) => {
+            const target = e.target.closest('.status-option');
+            if (!target) return;
+
+            const newStatus = target.dataset.status;
+            statusOptionsContainer.style.display = 'none';
+            updateStatusIndicator(document.getElementById('status-indicator'), newStatus);
+            document.getElementById('status-text').textContent = newStatus;
+
+            // Enviar al backend
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/user/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (!response.ok) throw new Error('No se pudo actualizar el estado.');
+            } catch (error) {
+                window.showNotification(error.message, 'error');
+            }
+        });
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', () => {
+            statusOptionsContainer.style.display = 'none';
+        });
+
+        // Setear estado inicial
+        updateStatusIndicator(document.getElementById('status-indicator'), userData.status);
+        document.getElementById('status-text').textContent = userData.status;
+    }
+
+    function updateStatusIndicator(element, status) {
+        if (!element) return;
+        element.className = 'status-indicator'; // Reset
+        if (status === 'Disponible') element.classList.add('online');
+        else if (status === 'Ausente') element.classList.add('away');
+        else if (status === 'Jugando') element.classList.add('playing');
+    }
+
+    function updateAllStatusIndicators() {
+        document.querySelectorAll('[data-user-status]').forEach(el => {
+            updateStatusIndicator(el.querySelector('.status-indicator'), el.dataset.userStatus);
         });
     }
 
