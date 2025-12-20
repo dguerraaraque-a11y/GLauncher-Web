@@ -1,5 +1,3 @@
-@echo off
-
 git add .
 ::El Commit
 git commit -m "Update 2.0"
