@@ -1,9 +1,9 @@
 @echo off
 
-REM Este script ahora solo ejecuta el publicador de Python, que es más robusto.
-echo Ejecutando el publicador de GLauncher...
+git add .
+::El Commit
+git commit -m "Update 2.0"
 
-REM Asegúrate de que Python esté en tu PATH.
-python admin/publisher.py
-
+git push -f origin main
 REM La pausa ya está manejada dentro del script de Python.
+pause
