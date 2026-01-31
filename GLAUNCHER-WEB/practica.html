@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica de Puntería y CPS - GLauncher</title>
+    <!-- Estilos y Scripts -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="images/glauncher logo.png">
+    <link rel="stylesheet" href="css/practica-styles.css">
+    <!-- Motor 3D Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Cargador de Modelos GLTF/GLB -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+        /* Estilos para el Inventario de Bloques */
+        .inventory-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 200; display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .inventory-window {
+            background-color: #c6c6c6; /* Color base GUI Minecraft */
+            border: 4px solid #373737;
+            border-radius: 4px;
+            padding: 20px;
+            width: 80%; max-width: 600px;
+            box-shadow: inset 4px 4px 0px #ffffff, inset -4px -4px 0px #555555;
+            text-align: center;
+        }
+        .inventory-window h3 { color: #373737; margin-top: 0; font-family: 'Minecraft', sans-serif; text-transform: uppercase; }
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 8px;
+            max-height: 300px; overflow-y: auto;
+            padding: 10px;
+            background-color: #8b8b8b;
+            box-shadow: inset 2px 2px 0px #373737, inset -2px -2px 0px #ffffff;
+        }
+        .inventory-item {
+            width: 50px; height: 50px;
+            background-color: #8b8b8b;
+            border: 2px solid #373737;
+            border-top-color: #ffffff; border-left-color: #ffffff;
+            cursor: pointer; transition: transform 0.1s;
+        }
+        .inventory-item:hover { background-color: #a0a0a0; transform: scale(1.1); z-index: 10; }
+        .inventory-item img { width: 100%; height: 100%; image-rendering: pixelated; }
+        .inventory-hint { color: #373737; margin-bottom: 0; font-size: 0.9em; margin-top: 10px; }
+        
+        /* Estilos para el Selector de Blueprints */
+        .blueprint-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        .blueprint-item {
+            background-color: #8b8b8b; border: 2px solid #373737;
+            padding: 10px; cursor: pointer; color: #fff; text-shadow: 1px 1px 0 #000;
+            display: flex; align-items: center; justify-content: center; min-height: 60px;
+        }
+        .blueprint-item:hover { background-color: #a0a0a0; border-color: #fff; }
+
+        /* Estilos para Bedwars y Corazones */
+        #bedwars-game-area { position: relative; overflow: hidden; }
+        #bedwars-game-area canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        #bedwars-start-text { position: relative; z-index: 10; cursor: pointer; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; }
+        
+        .hearts-container {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        .heart-icon {
+            width: 16px; height: 16px;
+            margin-right: 2px;
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+    <!-- Spinner de Carga, Notificaciones y Pantalla Offline -->
+    <div id="notification-container"></div>
+    <div id="offline-overlay" class="offline-overlay"><div class="offline-content"><i class="fas fa-wifi"></i><h2>Sin Conexión</h2><p>Revisa tu red e inténtalo de nuevo.</p></div></div>
+
+    <header class="header">
+        <div class="logo-container">
+            <img src="images/glauncher logo.png" alt="Logo de GLauncher" class="logo">
+            <h1>GLauncher</h1>
+        </div>
+        <nav class="auth-buttons">
+            <a href="radio.html" class="auth-button">Radio</a> 
+            <a href="practica.html" class="auth-button active">Práctica</a>
+            <a href="index.html" class="auth-button">Inicio</a> 
+            <a href="noticias.html" class="auth-button">Noticias</a>
+            <a href="shop.html" class="auth-button">Tienda</a>
+            <a href="download.html" class="auth-button">Descargas</a>
+            <a href="dashboard.html" class="auth-button">Dashboard</a>
+            <a href="login.html" class="auth-button">Iniciar Sesión</a>
+            <a href="register.html" class="auth-button">Registrar</a>
+            <a href="https://www.youtube.com/@DaniCraftYT25" target="_blank" class="auth-button youtube-button" title="Visita mi canal de YouTube">
+                <i class="fab fa-youtube"></i> Canal
+            </a>
+        </nav>
+    </header>
+
+    <div class="practice-layout">
+        <aside class="sidebar">
+            <h3 class="sidebar-title">Ejercicios</h3>
+            <ul class="exercise-list">
+                <li class="exercise-item active" data-target="cps-test"><a href="#"><i class="fas fa-mouse-pointer"></i> Test de CPS</a></li>
+                <li class="exercise-item" data-target="aim-trainer"><a href="#"><i class="fas fa-crosshairs"></i> Aim Trainer</a></li>
+                <li class="exercise-item" data-target="block-placer"><a href="#"><i class="fas fa-cube"></i> Block Placer</a></li>
+                <li class="exercise-item" data-target="bedwars-pvp"><a href="#"><i class="fas fa-shield-alt"></i> Bedwars PvP</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content practice-area">
+            <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Ocultar/Mostrar barra lateral"><i class="fas fa-bars"></i></button>
+
+            <!-- Contenido del Test de CPS -->
+            <div id="cps-test" class="exercise-content active">
+                <div class="exercise-header anim-fade-in">
+                    <h2 class="neon-title"><i class="fas fa-mouse-pointer"></i> PRÁCTICA DE CLICS POR SEGUNDO</h2>
+                    <p class="subtitle-text">Mide y mejora tu velocidad de clic.</p>
+                </div>
+                <div class="cps-controls-bar anim-slide-up">
+                    <div class="control-group">
+                        <label for="time-select"><i class="fas fa-clock"></i> Duración:</label>
+                        <select id="time-select">
+                            <option value="5">5s</option>
+                            <option value="10" selected>10s</option>
+                            <option value="15">15s</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <input type="number" id="custom-time-input" min="1" max="60" value="10" class="hidden">
+                    </div>
+                    <div class="stat-display">
+                        <div class="timer-display"><i class="fas fa-stopwatch"></i> <span id="cps-timer">10.00</span>s</div>
+                        <div class="live-cps-display"><i class="fas fa-fire"></i> CPS: <span id="live-cps">0.00</span></div>
+                    </div>
+                </div>
+                <div id="click-area" class="click-area-box anim-pop-in">
+                    <span id="start-text">Haz Clic para Empezar</span>
+                </div>
+            </div>
+
+            <!-- Contenido del Aim Trainer -->
+            <div id="aim-trainer" class="exercise-content">
+                <div class="exercise-header anim-fade-in">
+                    <h2 class="neon-title"><i class="fas fa-crosshairs"></i> AIM TRAINER</h2>
+                    <p class="subtitle-text">Mejora tu precisión y velocidad de reacción.</p>
+                </div>
+                <div class="aim-controls-bar anim-slide-up">
+                    <div class="stat-display">
+                        <div class="timer-display"><i class="fas fa-stopwatch"></i> <span id="aim-timer">30.00</span>s</div>
+                        <div class="live-aim-display">Aciertos: <span id="aim-hits">0</span></div>
+                        <div class="live-aim-display">Fallos: <span id="aim-misses">0</span></div>
+                    </div>
+                </div>
+                <div id="aim-game-area" class="aim-game-area anim-pop-in">
+                    <div id="aim-start-text">Haz clic aquí para empezar</div>
+                </div>
+            </div>
+
+            <!-- Contenido del Block Placer -->
+            <div id="block-placer" class="exercise-content">
+                <div class="exercise-header anim-fade-in">
+                    <h2 class="neon-title"><i class="fas fa-cube"></i> BLOCK PLACER</h2>
+                    <p class="subtitle-text" id="block-placer-subtitle">Construye lo más rápido que puedas.</p>
+                </div>
+                <div class="aim-controls-bar anim-slide-up">
+                     <div class="control-group">
+                        <label><i class="fas fa-bullseye"></i> Objetivo:</label>
+                        <button id="objective-btn" class="auth-button" style="padding: 5px 10px; font-size: 0.9em;">Seleccionar</button>
+                        <span id="current-objective-display" style="margin-left: 10px; color: var(--neon-blue); font-weight: bold;">Puente Libre</span>
+                    </div>
+                    <div class="stat-display">
+                        <div class="timer-display"><i class="fas fa-stopwatch"></i> <span id="block-timer">0.00</span>s</div>
+                        <div class="live-aim-display">Progreso: <span id="block-score">0 / 0</span></div>
+                    </div>
+                </div>
+                <div id="block-placer-area" class="aim-game-area anim-pop-in">
+                    <div id="block-start-text">Selecciona un objetivo y haz clic para empezar</div>
+                </div>
+                <!-- HOTBAR -->
+                <div id="hotbar-container" class="hotbar-container">
+                    <img src="images/hotbar/hotbar.png" class="hotbar-bg" alt="Barra de Minecraft">
+                    <img src="images/hotbar/hotbar_selection.png" id="hotbar-selection" class="hotbar-selection" alt="Selector">
+                    <div id="hotbar-slots" class="hotbar-slots">
+                        <!-- Los bloques se insertarán aquí con JS -->
+                    </div>
+                </div>
+                <!-- INVENTARIO -->
+                <div id="block-inventory" class="inventory-overlay hidden">
+                    <div class="inventory-window">
+                        <h3>Inventario de Bloques</h3>
+                        <div id="inventory-grid" class="inventory-grid"></div>
+                        <p class="inventory-hint">Haz clic en un bloque para asignarlo a tu mano actual. (Tecla 'E' para cerrar)</p>
+                    </div>
+                </div>
+                <!-- SELECTOR DE BLUEPRINTS -->
+                <div id="blueprint-selector" class="inventory-overlay hidden">
+                    <div class="inventory-window">
+                        <h3>Seleccionar Construcción</h3>
+                        <div id="blueprint-grid" class="inventory-grid blueprint-grid"></div>
+                        <button id="close-blueprint-selector" class="auth-button" style="margin-top: 15px;">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido del Bedwars PvP -->
+            <div id="bedwars-pvp" class="exercise-content">
+                <div class="exercise-header anim-fade-in">
+                    <h2 class="neon-title"><i class="fas fa-shield-alt"></i> BEDWARS PVP (1v1)</h2>
+                    <p class="subtitle-text">Entrena tu PvP contra un Bot.</p>
+                </div>
+                <div class="aim-controls-bar anim-slide-up">
+                    <div class="stat-display">
+                        <div class="live-aim-display" style="color: var(--neon-pink);">Bot: <div id="bot-health-container" class="hearts-container"></div> | Cama: <span id="bot-bed-status">❤️</span></div>
+                        <div class="live-aim-display" style="color: var(--neon-green);">Tú: <div id="player-health-container" class="hearts-container"></div> | Cama: <span id="player-bed-status">❤️</span></div>
+                    </div>
+                </div>
+                <div id="bedwars-game-area" class="aim-game-area anim-pop-in">
+                    <div id="bedwars-start-text">Haz clic para empezar el duelo</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Resultados (CPS) -->
+    <div id="cps-results-modal-overlay" class="modal-overlay hidden">
+        <div class="result-display-box anim-pop-in">
+            <h3>Resultados Finales (CPS)</h3>
+            <div id="cps-rating" class="cps-rating">
+                <i class="fas fa-question-circle"></i>
+                <span>Calculando...</span>
+            </div>
+            <div class="final-stats-grid">
+                <div id="final-cps" class="final-stat">
+                    <p>CPS</p>
+                    <span>0.00</span>
+                </div>
+                <div id="total-clicks" class="final-stat">
+                    <p>Clics</p>
+                    <span>0</span>
+                </div>
+            </div>
+            <button id="cps-restart-btn" class="restart-button">Volver a Intentar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Resultados (Aim) -->
+    <div id="aim-results-modal-overlay" class="modal-overlay hidden">
+        <div class="result-display-box anim-pop-in">
+            <h3>Resultados Finales (Aim)</h3>
+            <div id="aim-rating" class="cps-rating">
+                <i class="fas fa-bullseye"></i>
+                <span>¡Buen trabajo!</span>
+            </div>
+            <div class="final-stats-grid aim-stats">
+                <div class="final-stat">
+                    <p>Aciertos</p>
+                    <span id="final-hits">0</span>
+                </div>
+                <div class="final-stat">
+                    <p>Fallos</p>
+                    <span id="final-misses">0</span>
+                </div>
+                <div class="final-stat">
+                    <p>Precisión</p>
+                    <span id="final-accuracy">0%</span>
+                </div>
+            </div>
+            <button id="aim-restart-btn" class="restart-button">Volver a Intentar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Resultados (Block Placer) -->
+    <div id="block-results-modal-overlay" class="modal-overlay hidden">
+        <div class="result-display-box anim-pop-in">
+            <h3 id="block-result-title">¡Tiempo!</h3>
+            <div id="block-rating" class="cps-rating">
+                <span>¡Sigue así!</span>
+            </div>
+            <div class="final-stats-grid" id="block-final-stats">
+                <!-- Estadísticas se llenan con JS -->
+            </div>
+            <button id="block-restart-btn" class="restart-button">Construir de Nuevo</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>GLauncher &copy; 2025. Todos los derechos reservados.</p>
+        <p>Desarrollador Principal: <a href="https://www.youtube.com/@DaniCraftYT25" target="_blank" class="neon-hover-text">DaniCraftYT25</a></p>
+    </footer>
+
+    <!-- Barra de Navegación Inferior (Solo para Móviles) -->
+    <nav class="bottom-nav">
+        <a href="index.html"><i class="fas fa-home"></i><span>Inicio</span></a>
+        <a href="radio.html"><i class="fas fa-broadcast-tower"></i><span>Radio</span></a>
+        <a href="practica.html" class="active"><i class="fas fa-mouse-pointer"></i><span>CPS</span></a>
+        <a href="noticias.html"><i class="fas fa-newspaper"></i><span>Noticias</span></a>
+        <a href="download.html"><i class="fas fa-download"></i><span>Descargas</span></a>
+        <a href="dashboard.html"><i class="fas fa-user-circle"></i><span>Perfil</span></a>
+    </nav>
+
+    <!-- Banner de Consentimiento de Cookies -->
+    <div id="cookie-banner" class="cookie-consent-banner">
+        <p class="cookie-text">
+            Utilizamos cookies para mejorar tu experiencia en nuestro sitio. Al continuar, aceptas nuestro uso de cookies. <a href="privacy-policy.html">Leer más</a>.
+        </p>
+        <button id="accept-cookie-btn" class="auth-button-action cookie-accept-btn" style="background-color: var(--neon-green); box-shadow: var(--shadow-green);">Aceptar</button>
+    </div>
+
+    <audio id="hit-sound" src="sounds/hit.mp3" preload="auto"></audio>
+    <audio id="place-block-sound" src="sounds/minecraft_click.mp3" preload="auto"></audio>
+    <audio id="level-up-sound" src="sounds/level_up.mp3" preload="auto"></audio>
+
+    <script src="js/global-script.js"></script>
+    <script src="js/practica-script.js"></script>
+</body>
+</html>
