@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>GLauncher - Historial de Versiones</title>
+    <link rel="stylesheet" href="css/styles.css"> 
+    <link rel="icon" type="image/png" href="images/glauncher logo.png">
+    <link rel="stylesheet" href="css/download-styles.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Fuente de Minecraft solo para etiquetas específicas */
+        @font-face {
+            font-family: 'Minecraftia';
+            src: url('fonts/Minecraftia.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --mc-yellow: #FFFF55;
+            --mc-red: #FF5555;
+            --neon-cyan: #00d4ff;
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background-color: #0a0a0c;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+        }
+
+        /* Títulos modernos SIN fuente de Minecraft para GLauncher y Registro */
+        .header h1, .neon-title, .section-title {
+            font-family: 'Segoe UI', sans-serif !important;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Solo versiones y badges usan Minecraftia */
+        .version-tag, .badge-deleted, .badge-stable, .mc-label {
+            font-family: 'Minecraftia', sans-serif !important;
+        }
+
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 20px;
+        }
+
+        .content-layout {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--neon-cyan);
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        /* CONTENEDOR DE VERSIONES CON SCROLL */
+        .scroll-container {
+            height: 550px;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        /* Tarjetas de Versión */
+        .version-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-radius: 12px;
+            transition: 0.3s ease;
+        }
+
+        .version-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--neon-cyan);
+        }
+
+        .version-card.is-deleted {
+            filter: grayscale(1);
+            opacity: 0.6;
+            border-color: var(--mc-red);
+        }
+
+        .version-card.is-deleted .version-tag {
+            text-decoration: line-through;
+            color: var(--mc-red) !important;
+        }
+
+        .version-info {
+            flex-grow: 1;
+            margin: 0 20px;
+            text-align: left;
+        }
+
+        .version-tag {
+            color: var(--mc-yellow);
+            font-size: 1.3rem;
+            margin: 0;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        .badge-stable { background: #55FF55; color: #003300; padding: 3px 8px; font-size: 0.7rem; border-radius: 4px; margin-left: 8px; }
+        .badge-deleted { background: #550000; color: #FF5555; padding: 3px 8px; font-size: 0.7rem; border-radius: 4px; margin-left: 8px; }
+
+        /* --- BOTONES DE DESCARGA CON TOOLTIP Y ANIMACIÓN --- */
+        .download-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .download-btn-modern {
+            position: relative;
+            background: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            text-decoration: none;
+            /* Animación suave en X y escala */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        .download-btn-modern:hover {
+            transform: scale(1.2) translateX(8px); /* Se agranda y mueve en X */
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        /* Tooltip (EXE o ZIP) */
+        .download-btn-modern::after {
+            content: attr(data-type);
+            position: absolute;
+            top: -30px;
+            background: var(--neon-cyan);
+            color: #000;
+            padding: 2px 8px;
+            font-size: 0.65rem;
+            font-family: 'Minecraftia', sans-serif;
+            border-radius: 4px;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s ease;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .download-btn-modern:hover::after {
+            opacity: 1;
+            visibility: visible;
+            top: -40px;
+        }
+
+        .download-btn-modern.disabled {
+            border-color: #444;
+            color: #444;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Cuadro de Estado Actual */
+        .status-box {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .status-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        .status-list li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ccc;
+        }
+
+        .status-list i { color: var(--neon-cyan); }
+
+        @media (max-width: 900px) {
+            .content-layout { grid-template-columns: 1fr; }
+            .status-box { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo-container">
+            <img src="images/glauncher logo.png" alt="Logo de GLauncher" class="logo">
+            <h1>GLauncher</h1>
+        </div>
+        <nav class="auth-buttons">
+            <a href="radio.html" class="auth-button">Radio</a> 
+            <a href="practica.html" class="auth-button">Práctica de CPS</a>
+            <a href="index.html" class="auth-button active">Inicio</a> 
+            <a href="noticias.html" class="auth-button">Noticias</a>
+            <a href="shop.html" class="auth-button">Tienda</a>
+            <a href="download.html" class="auth-button">Descargas</a>
+            <a href="dashboard.html" class="auth-button">Dashboard</a>
+            <a href="login.html" class="auth-button">Iniciar Sesión</a>
+            <a href="register.html" class="auth-button">Registrar</a>
+            <a href="https://www.youtube.com/@DaniCraftYT25" target="_blank" class="auth-button youtube-button" title="Visita mi canal de YouTube">
+                <i class="fab fa-youtube"></i> Canal
+            </a>
+        </nav>
+    </header>
+
+    <main class="main-wrapper">
+        <h2 class="neon-title"><i class="fas fa-terminal"></i> REGISTRO DEL SISTEMA</h2>
+        
+        <div class="content-layout">
+            <section>
+                <div class="section-header">
+                    <i class="fas fa-history"></i> <span class="mc-label">CHANGELOG</span>
+                </div>
+                
+                <div class="scroll-container">
+                    <div class="version-card">
+                        <img src="images/glauncher logo.png" width="45" style="image-rendering: pixelated;">
+                        <div class="version-info">
+                            <h3 class="version-tag">V1.1 <span class="badge-stable">ESTABLE</span></h3>
+                            <p style="color:#aaa; font-size: 0.9rem; margin-top: 5px;">Mejoras en GMusic y fix de bugs.</p>
+                        </div>
+                        <div class="download-actions">
+                            <a href="downloads/GLauncher-1.1.exe" class="download-btn-modern" data-type="EXE">
+                                <i class="fas fa-file-download"></i>
+                            </a>
+                            <a href="downloads/GLauncher-1.1.zip" class="download-btn-modern" data-type="ZIP" style="border-color: var(--mc-yellow); color: var(--mc-yellow);">
+                                <i class="fas fa-file-archive"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="version-card is-deleted">
+                        <img src="images/glauncher logo.png" width="45" style="filter: grayscale(1);">
+                        <div class="version-info">
+                            <h3 class="version-tag">V1.0 <span class="badge-deleted">ELIMINADA</span></h3>
+                            <p style="color:#777; font-size: 0.9rem; margin-top: 5px;">Retirada por fallos críticos en la autenticación.</p>
+                        </div>
+                        <div class="download-actions">
+                            <div class="download-btn-modern disabled" data-type="ELIMINADA"><i class="fas fa-times"></i></div>
+                        </div>
+                    </div>
+
+                    <div style="height: 300px; display: flex; align-items: center; justify-content: center; border: 1px dashed #333; border-radius: 12px; color: #444;">
+                        <p class="mc-label">Próximamente más versiones...</p>
+                    </div>
+                </div>
+            </section>
+
+            <aside>
+                <div class="section-header">
+                    <i class="fas fa-info-circle"></i> <span class="mc-label">ESTADO ACTUAL</span>
+                </div>
+                
+                <div class="status-box">
+                    <h4 style="margin-top:0; color: #fff; font-size: 1.2rem;">PRÓXIMA VERSIÓN: <span style="color: var(--neon-cyan);">V1.2</span></h4>
+                    <ul class="status-list">
+                        <li><i class="fas fa-check-circle"></i> Soporte para Shaders</li>
+                        <li><i class="fas fa-check-circle"></i> Galería de Skins</li>
+                        <li><i class="fas fa-check-circle"></i> Optimización de motor</li>
+                        <li><i class="fas fa-spinner fa-spin"></i> Testeo de Servidores</li>
+                    </ul>
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+                    <p style="font-size: 0.8rem; color: #888;">Reporta problemas en el canal oficial de DaniCraftYT25.</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>GLauncher &copy; 2026 | Desarrollado por <a href="#" class="neon-hover-text">DaniCraftYT25</a></p>
+    </footer>
+
+</body>
+</html>
