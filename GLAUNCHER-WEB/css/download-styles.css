@@ -214,6 +214,19 @@
     transition: all 0.3s ease;
 }
 
+.historial-button {
+	flex-grow: 1;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--neon-blue);
+    background-color: transparent;
+    color: hsl(0, 0%, 100%); /* Color de texto blanco para mejor visibilidad */
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+	
 .download-button:hover {
     background-color: var(--neon-blue);
     color: #FFFFFF; /* Color de texto blanco puro en hover */

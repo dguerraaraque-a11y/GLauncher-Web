@@ -24,16 +24,9 @@
             --card-bg: rgba(255, 255, 255, 0.05);
         }
 
-        body {
-            background-color: #0a0a0c;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            color: #fff;
-        }
 
         /* Títulos modernos SIN fuente de Minecraft para GLauncher y Registro */
-        .header h1, .neon-title, .section-title {
+        .neon-title, .section-title {
             font-family: 'Segoe UI', sans-serif !important;
             font-weight: 800;
             text-transform: uppercase;
@@ -228,6 +221,9 @@
             .content-layout { grid-template-columns: 1fr; }
             .status-box { position: static; }
         }
+		.point-class {
+
+
     </style>
 </head>
 <body>
@@ -235,7 +231,7 @@
     <header class="header">
         <div class="logo-container">
             <img src="images/glauncher logo.png" alt="Logo de GLauncher" class="logo">
-            <h1>GLauncher</h1>
+            <h1 class="tittle">GLauncher</h1>
         </div>
         <nav class="auth-buttons">
             <a href="radio.html" class="auth-button">Radio</a> 
@@ -261,6 +257,22 @@
                 <div class="section-header">
                     <i class="fas fa-history"></i> <span class="mc-label">CHANGELOG</span>
                 </div>
+				
+                <div class="version-card">
+                        <img src="images/glauncher logo.png" width="45" style="image-rendering: pixelated;">
+                        <div class="version-info">
+                            <h3 class="version-tag">V1.2 <span class="badge-stable">ESTABLE</span></h3>
+                            <p style="color:#aaa; font-size: 0.9rem; margin-top: 5px;">Mejoras en la GUI; Optimización y Más.</p>
+                        </div>
+                        <div class="download-actions">
+                            <a href="downloads/GLauncher-1.2.exe" class="download-btn-modern" data-type="EXE">
+                                <i class="fas fa-file-download"></i>
+                            </a>
+                            <a href="downloads/GLauncher-1.2.zip" class="download-btn-modern" data-type="ZIP" style="border-color: var(--mc-yellow); color: var(--mc-yellow);">
+                                <i class="fas fa-file-archive"></i>
+                            </a>
+                        </div>
+                    </div>				
                 
                 <div class="scroll-container">
                     <div class="version-card">
@@ -270,11 +282,8 @@
                             <p style="color:#aaa; font-size: 0.9rem; margin-top: 5px;">Mejoras en GMusic y fix de bugs.</p>
                         </div>
                         <div class="download-actions">
-                            <a href="downloads/GLauncher-1.1.exe" class="download-btn-modern" data-type="EXE">
+                            <a href="https://github.com/dguerraaraque-a11y/GLauncher-Web/releases/download/Launcher/GLauncher-1.1.exe" class="download-btn-modern" data-type="EXE">
                                 <i class="fas fa-file-download"></i>
-                            </a>
-                            <a href="downloads/GLauncher-1.1.zip" class="download-btn-modern" data-type="ZIP" style="border-color: var(--mc-yellow); color: var(--mc-yellow);">
-                                <i class="fas fa-file-archive"></i>
                             </a>
                         </div>
                     </div>
@@ -302,12 +311,12 @@
                 </div>
                 
                 <div class="status-box">
-                    <h4 style="margin-top:0; color: #fff; font-size: 1.2rem;">PRÓXIMA VERSIÓN: <span style="color: var(--neon-cyan);">V1.2</span></h4>
+                    <h4 style="margin-top:0; color: #fff; font-size: 1.2rem;">PRÓXIMA VERSIÓN: <span style="color: var(--neon-cyan);">V1.3</span></h4>
                     <ul class="status-list">
-                        <li><i class="fas fa-check-circle"></i> Soporte para Shaders</li>
-                        <li><i class="fas fa-check-circle"></i> Galería de Skins</li>
-                        <li><i class="fas fa-check-circle"></i> Optimización de motor</li>
-                        <li><i class="fas fa-spinner fa-spin"></i> Testeo de Servidores</li>
+                        <li><i></i><strong class="point-class">.</strong> Mejoras en la GUI</li>
+                        <li><i></i><strong class="point-class">.</strong> Galería de Skins</li>
+                        <li><i></i><strong class="point-class">.</strong> Optimización de motor</li>
+                        <li><i></i><strong class="point-class">.</strong> Mejora en la Creación de Servers</li>
                     </ul>
                     <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
                     <p style="font-size: 0.8rem; color: #888;">Reporta problemas en el canal oficial de DaniCraftYT25.</p>
