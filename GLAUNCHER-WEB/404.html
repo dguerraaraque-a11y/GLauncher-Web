@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - ¡Chunk No Cargado! | GLauncher</title>
+    <link rel="icon" type="image/png" href="images/glauncher logo.png">
+    <style>
+        /* Declaración de la fuente de Minecraft */
+        @font-face {
+            font-family: 'Minecraftia';
+            src: url('fonts/Minecraftia.ttf') format('truetype');
+        }
+
+        :root {
+            --mc-gui-bg: #C6C6C6;
+            --mc-shadow-dark: #373737;
+            --mc-shadow-light: #FFFFFF;
+            --mc-text-shadow: #3F3F3F;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a; /* Fondo oscuro para resaltar el panel */
+            font-family: 'Minecraftia', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #3F3F3F;
+        }
+
+        /* Panel Principal con estética GUI de Minecraft */
+        .mc-panel {
+            background-color: var(--mc-gui-bg);
+            border: 4px solid #000;
+            box-shadow: inset -4px -4px 0px var(--mc-shadow-dark), 
+                        inset 4px 4px 0px var(--mc-shadow-light);
+            padding: 30px;
+            width: 90%;
+            max-width: 550px;
+            position: relative;
+            text-align: center;
+        }
+
+        /* Título del Panel */
+        .panel-header {
+            background-color: #373737;
+            color: #AAAAAA;
+            padding: 5px 10px;
+            position: absolute;
+            top: -25px;
+            left: 10px;
+            border: 3px solid #000;
+            font-size: 0.8rem;
+        }
+
+        /* Contenedor del GIF */
+        .gif-area {
+            width: 120px; /* Tamaño pequeño solicitado */
+            margin: 0 auto 20px;
+        }
+
+        .gif-area img {
+            width: 100%;
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: #FFFF55; /* Amarillo de advertencia MC */
+            text-shadow: 2px 2px 0px var(--mc-text-shadow);
+            margin: 10px 0;
+        }
+
+        p {
+            font-size: 0.85rem;
+            margin-bottom: 25px;
+            color: #3F3F3F;
+            line-height: 1.4;
+        }
+
+        /* Botón Estilo Minecraft */
+        .mc-button {
+            background-color: #AAAAAA;
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 12px 20px;
+            border: 3px solid #000;
+            box-shadow: inset -4px -4px 0px #555555, 
+                        inset 4px 4px 0px #DDDDDD;
+            display: inline-block;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .mc-button:hover {
+            background-color: #BBBBBB;
+            transform: scale(1.02);
+        }
+
+        .mc-button:active {
+            box-shadow: inset 4px 4px 0px #555555, 
+                        inset -4px -4px 0px #DDDDDD;
+        }
+
+        .footer-info {
+            margin-top: 25px;
+            font-size: 0.7rem;
+            color: #555555;
+            border-top: 2px solid #A1A1A1;
+            padding-top: 15px;
+        }
+
+        .author {
+            color: #5555FF; /* Azul de nombres MC */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mc-panel">
+        <div class="panel-header">MINECRAFT - GLAUNCHER</div>
+
+        <div class="gif-area">
+            <img src="gifs/404.gif" alt="Error">
+        </div>
+
+        <h1>ERROR 404</h1>
+        <p>¡Vaya! Este chunk no ha cargado correctamente en el mapa de GLauncher. <br> Intenta volver al punto de spawn.</p>
+        
+        <a href="https://glauncher.vercel.app" class="mc-button">
+            VOLVER AL INICIO
+        </a>
+
+        <div class="footer-info">
+            COORD: X: ?? | Y: 0 | Z: ?? <br>
+            Author: <span class="author">By DaniCraftYT25</span>
+        </div>
+    </div>
+
+</body>
+</html>
