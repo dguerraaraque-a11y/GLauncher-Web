@@ -80,6 +80,61 @@
             margin-right: 2px;
             image-rendering: pixelated;
         }
+
+        /* --- MEJORAS MÓVILES Y NUEVOS ESTILOS --- */
+        @media (max-width: 768px) {
+            .practice-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                padding: 10px;
+                overflow-x: auto;
+            }
+            .sidebar-title { display: none; }
+            .exercise-list {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+                padding: 0;
+            }
+            .exercise-item {
+                flex: 0 0 auto;
+                margin: 0;
+                padding: 8px 15px;
+                border-radius: 20px;
+                background: rgba(255,255,255,0.05);
+                white-space: nowrap;
+            }
+            .exercise-item.active {
+                background: var(--neon-blue);
+                color: #000;
+            }
+            .sidebar-toggle-btn { display: none; }
+            .main-content.practice-area {
+                padding: 15px;
+                height: auto;
+                min-height: calc(100vh - 200px);
+            }
+            .inventory-window {
+                width: 95%;
+                max-height: 80vh;
+            }
+        }
+
+        /* Estilos para Categorías de Blueprints */
+        .blueprint-categories { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .category-btn { background: rgba(0,0,0,0.3); border: 1px solid #555; color: #fff; padding: 5px 10px; cursor: pointer; white-space: nowrap; transition: 0.3s; }
+        .category-btn:hover, .category-btn.active { border-color: var(--neon-green); color: var(--neon-green); }
+
+        /* Estilos Test de Reacción */
+        #reaction-area { width: 100%; height: 300px; background-color: #ce2636; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 10px; font-size: 1.5em; font-weight: bold; text-align: center; user-select: none; transition: background-color 0.1s; color: #fff; text-shadow: 1px 1px 2px #000; flex-direction: column; gap: 10px; }
+        #reaction-area.waiting { background-color: #ce2636; }
+        #reaction-area.ready { background-color: #4bdb6a; }
+        #reaction-area.result { background-color: #2b87d1; }
     </style>
 </head>
 <body>
@@ -115,7 +170,7 @@
                 <li class="exercise-item active" data-target="cps-test"><a href="#"><i class="fas fa-mouse-pointer"></i> Test de CPS</a></li>
                 <li class="exercise-item" data-target="aim-trainer"><a href="#"><i class="fas fa-crosshairs"></i> Aim Trainer</a></li>
                 <li class="exercise-item" data-target="block-placer"><a href="#"><i class="fas fa-cube"></i> Block Placer</a></li>
-                <li class="exercise-item" data-target="bedwars-pvp"><a href="#"><i class="fas fa-shield-alt"></i> Bedwars PvP</a></li>
+                <li class="exercise-item" data-target="reaction-test"><a href="#"><i class="fas fa-bolt"></i> Test de Reacción</a></li>
             </ul>
         </aside>
 
@@ -207,26 +262,28 @@
                 <div id="blueprint-selector" class="inventory-overlay hidden">
                     <div class="inventory-window">
                         <h3>Seleccionar Construcción</h3>
+                        <div class="blueprint-categories">
+                            <button class="category-btn active" onclick="filterBlueprints('structures')">Estructuras</button>
+                            <button class="category-btn" onclick="filterBlueprints('pixelart')">Pixel Art</button>
+                            <button class="category-btn" onclick="filterBlueprints('mobs')">Cabezas</button>
+                        </div>
                         <div id="blueprint-grid" class="inventory-grid blueprint-grid"></div>
                         <button id="close-blueprint-selector" class="auth-button" style="margin-top: 15px;">Cerrar</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Contenido del Bedwars PvP -->
-            <div id="bedwars-pvp" class="exercise-content">
+            <!-- Contenido del Test de Reacción (Nuevo) -->
+            <div id="reaction-test" class="exercise-content">
                 <div class="exercise-header anim-fade-in">
-                    <h2 class="neon-title"><i class="fas fa-shield-alt"></i> BEDWARS PVP (1v1)</h2>
-                    <p class="subtitle-text">Entrena tu PvP contra un Bot.</p>
+                    <h2 class="neon-title"><i class="fas fa-bolt"></i> TEST DE REACCIÓN</h2>
+                    <p class="subtitle-text">Haz clic en cuanto el color cambie a verde.</p>
                 </div>
-                <div class="aim-controls-bar anim-slide-up">
-                    <div class="stat-display">
-                        <div class="live-aim-display" style="color: var(--neon-pink);">Bot: <div id="bot-health-container" class="hearts-container"></div> | Cama: <span id="bot-bed-status">❤️</span></div>
-                        <div class="live-aim-display" style="color: var(--neon-green);">Tú: <div id="player-health-container" class="hearts-container"></div> | Cama: <span id="player-bed-status">❤️</span></div>
+                <div id="reaction-game-area" class="aim-game-area anim-pop-in" style="background: transparent; border: none;">
+                    <div id="reaction-area" class="waiting">
+                        <i class="fas fa-hourglass-start" style="font-size: 3em;"></i>
+                        <span>Haz clic para empezar</span>
                     </div>
-                </div>
-                <div id="bedwars-game-area" class="aim-game-area anim-pop-in">
-                    <div id="bedwars-start-text">Haz clic para empezar el duelo</div>
                 </div>
             </div>
         </main>
@@ -323,5 +380,61 @@
 
     <script src="js/global-script.js"></script>
     <script src="js/practica-script.js"></script>
+    <script>
+        // Script Inline para las nuevas funcionalidades (ya que no tenemos acceso al JS externo)
+        
+        // --- Lógica del Test de Reacción ---
+        const reactionArea = document.getElementById('reaction-area');
+        let reactionState = 'idle'; // idle, waiting, ready, result
+        let reactionTimer;
+        let reactionStartTime;
+
+        if(reactionArea) {
+            reactionArea.addEventListener('mousedown', () => {
+                if (reactionState === 'idle' || reactionState === 'result') {
+                    reactionState = 'waiting';
+                    reactionArea.className = 'waiting';
+                    reactionArea.innerHTML = '<i class="fas fa-ellipsis-h" style="font-size: 3em;"></i><span>Espera al verde...</span>';
+                    
+                    const randomTime = Math.floor(Math.random() * 3000) + 2000; // 2-5 segundos
+                    reactionTimer = setTimeout(() => {
+                        reactionState = 'ready';
+                        reactionArea.className = 'ready';
+                        reactionArea.innerHTML = '<i class="fas fa-bolt" style="font-size: 3em;"></i><span>¡CLIC AHORA!</span>';
+                        reactionStartTime = Date.now();
+                    }, randomTime);
+                } else if (reactionState === 'waiting') {
+                    clearTimeout(reactionTimer);
+                    reactionState = 'result';
+                    reactionArea.className = 'waiting'; // Volver a rojo
+                    reactionArea.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size: 3em;"></i><span>¡Muy rápido! Intenta de nuevo.</span>';
+                } else if (reactionState === 'ready') {
+                    const reactionTime = Date.now() - reactionStartTime;
+                    reactionState = 'result';
+                    reactionArea.className = 'result';
+                    reactionArea.innerHTML = `<i class="fas fa-clock" style="font-size: 3em;"></i><span>${reactionTime} ms</span><small>Clic para intentar de nuevo</small>`;
+                }
+            });
+        }
+
+        // --- Lógica Simulada para Categorías de Block Placer ---
+        // Nota: Esto es visual, la lógica real de carga de blueprints debería estar en practica-script.js
+        // Aquí simulamos el filtrado actualizando la UI de los botones.
+        window.filterBlueprints = function(category) {
+            // Actualizar botones
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Aquí normalmente filtraríamos la lista de blueprints.
+            // Como no tenemos acceso a la lista original, mostramos un mensaje o intentamos filtrar si los elementos existen.
+            const grid = document.getElementById('blueprint-grid');
+            if(grid) {
+                // Simulación: Si tuviéramos los elementos, los ocultaríamos/mostraríamos según una clase o data-attribute.
+                // Por ahora, notificamos al usuario (o al desarrollador) que la lógica debe implementarse en el JS principal.
+                console.log("Filtrando por categoría: " + category);
+                // Si el script principal expone la función de renderizado, podríamos llamarla aquí con el filtro.
+            }
+        };
+    </script>
 </body>
 </html>

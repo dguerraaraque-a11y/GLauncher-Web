@@ -9,7 +9,10 @@
         /* Declaración de la fuente de Minecraft */
         @font-face {
             font-family: 'Minecraftia';
-            src: url('fonts/Minecraftia.ttf') format('truetype');
+            /* Intenta primero la ruta local, si falla el navegador pasará a la siguiente si se definiera, 
+               pero para asegurar compatibilidad total usamos el script de abajo */
+            src: url('fonts/Minecraftia.ttf') format('truetype'),
+                 url('../fonts/Minecraftia.ttf') format('truetype');
         }
 
         :root {
@@ -125,7 +128,7 @@
         <div class="panel-header">MINECRAFT - GLAUNCHER</div>
 
         <div class="gif-area">
-            <img src="gifs/404.gif" alt="Error">
+            <img src="gifs/404.gif" alt="Error" onerror="this.onerror=null; this.src='../gifs/404.gif';">
         </div>
 
         <h1>ERROR 404</h1>
@@ -141,5 +144,20 @@
         </div>
     </div>
 
+    <script>
+        // Verificación extra para la fuente si el navegador no procesa el fallback del CSS
+        document.fonts.load('1em Minecraftia').then(function() {
+            if (!document.fonts.check('1em Minecraftia')) {
+                const newStyle = document.createElement('style');
+                newStyle.appendChild(document.createTextNode(`
+                    @font-face {
+                        font-family: 'Minecraftia';
+                        src: url('../fonts/Minecraftia.ttf') format('truetype');
+                    }
+                `));
+                document.head.appendChild(newStyle);
+            }
+        });
+    </script>
 </body>
 </html>
