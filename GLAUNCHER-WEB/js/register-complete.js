@@ -1,5 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
     const BACKEND_URL = 'https://glauncher-api.onrender.com';
+
+    // Verificar si el token viene en la URL (desde la redirección del backend)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+        localStorage.setItem('social_login_token', tokenFromUrl);
+        // Limpiar la URL para que no se vea el token feo
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const tempToken = localStorage.getItem('social_login_token');
 
     // Si no hay token, el usuario no debería estar aquí. Redirigir.
