@@ -1,0 +1,413 @@
+<html lang="es"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title>GLauncher - Noticias y Eventos</title>
+    <link rel="stylesheet" href="css/styles.css"> 
+    <link rel="icon" type="image/png" href="images/glauncher logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* --- Nuevos Estilos para la Página de Noticias --- */
+        .news-page-header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 40px;
+        }
+        .news-page-header .neon-title {
+            font-size: 3em;
+            color: var(--neon-blue);
+            text-shadow: var(--shadow-blue);
+        }
+        .news-page-header .subtitle-text {
+            font-size: 1.2em;
+            color: var(--text-color-dark);
+            max-width: 600px;
+            margin: 10px auto 0 auto;
+        }
+
+        .news-feed-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .news-article-card {
+            background: var(--secondary-bg-color);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .news-article-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-pink);
+            border-color: var(--neon-pink);
+        }
+
+        .article-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .article-title {
+            font-size: 1.3em;
+            color: var(--text-color-light);
+            margin-bottom: 10px;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+
+        .article-summary {
+            font-size: 0.95em;
+            color: var(--text-color-dark);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            color: var(--text-color-dark);
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: auto;
+        }
+
+        /* --- Pestañas de Categoría --- */
+        .news-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .news-tab-btn {
+            background: var(--secondary-bg-color);
+            border: 1px solid var(--neon-blue);
+            color: var(--text-color-dark);
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        .news-tab-btn:hover, .news-tab-btn.active {
+            background: var(--neon-blue);
+            color: var(--main-bg-color);
+            box-shadow: var(--shadow-blue);
+            border-color: var(--neon-blue);
+        }
+        .news-tab-btn .count {
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-left: 5px;
+        }
+
+        /* --- Skeleton Loading (Animación de Carga) --- */
+        .skeleton-card {
+            background: var(--secondary-bg-color);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            height: 420px;
+            display: flex;
+            flex-direction: column;
+            animation: pulse-skeleton 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-skeleton {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        .skeleton-img {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .skeleton-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .skeleton-line {
+            height: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        .skeleton-line.title { height: 25px; width: 80%; }
+        .skeleton-line.short { width: 60%; }
+    </style>
+</head>
+<body>
+    <!-- Spinner de Carga, Notificaciones y Pantalla Offline -->
+    <div id="loader-overlay" class="loader-overlay"><div class="spinner"></div></div>
+    <div id="notification-container"></div>
+    <div id="offline-overlay" class="offline-overlay"><div class="offline-content"><i class="fas fa-wifi"></i><h2>Sin Conexión</h2><p>Revisa tu red e inténtalo de nuevo.</p></div></div>
+
+    <header class="header">
+        <div class="logo-container">
+            <img src="images/glauncher logo.png" alt="Logo de GLauncher" class="logo">
+            <img src="images/minecraft_title.png" alt="Título de GLauncher" class="logo-title-img">
+        </div>
+        <nav class="auth-buttons">
+            <a href="index.html" class="auth-button">Inicio</a> 
+            <a href="noticias.html" class="auth-button active">Noticias</a>
+            <a href="download.html" class="auth-button">Descargas</a>
+            <a href="dashboard.html" class="auth-button">Dashboard</a>
+            <a href="login.html" class="auth-button">Iniciar Sesión</a>
+            <a href="register.html" class="auth-button">Registrar</a>
+            <a href="https://www.youtube.com/@DaniCraftYT25" target="_blank" class="auth-button youtube-button" title="Visita mi canal de YouTube">
+                <i class="fab fa-youtube"></i> Canal
+            </a>
+        </nav>
+    </header>
+
+    <main class="main-content news-page">
+        <div class="news-page-header">
+            <h2 class="neon-title"><i class="fas fa-newspaper"></i> Últimas Noticias de Minecraft</h2>
+            <p class="subtitle-text">Mantente al día con las novedades más importantes del universo Minecraft, directamente desde las mejores fuentes.</p>
+        </div>
+
+        <!-- Pestañas de Filtros -->
+        <div class="news-tabs">
+            <button class="news-tab-btn active" data-category="all">Todo <span class="count" id="count-all">(0)</span></button>
+            <button class="news-tab-btn" data-category="java">Java <span class="count" id="count-java">(0)</span></button>
+            <button class="news-tab-btn" data-category="bedrock">Bedrock <span class="count" id="count-bedrock">(0)</span></button>
+            <button class="news-tab-btn" data-category="community">Comunidad <span class="count" id="count-community">(0)</span></button>
+        </div>
+
+        <div id="news-feed-container" class="news-feed-container">
+            <!-- Las noticias se cargarán aquí dinámicamente desde el backend -->
+        </div>
+
+    <footer class="footer">
+        <p>GLauncher © 2026. Todos los derechos reservados.</p>
+        <p>Desarrollador Principal: <a href="https://www.youtube.com/@DaniCraftYT25" target="_blank" class="neon-hover-text">DaniCraftYT25</a></p>
+    </footer>
+
+    <!-- Barra de Navegación Inferior (Solo para Móviles) -->
+    <nav class="bottom-nav">
+        <a href="index.html"><i class="fas fa-home"></i><span>Inicio</span></a>
+        <a href="radio.html"><i class="fas fa-broadcast-tower"></i><span>Radio</span></a>
+        <a href="noticias.html" class="active"><i class="fas fa-newspaper"></i><span>Noticias</span></a>
+        <a href="download.html"><i class="fas fa-download"></i><span>Descargas</span></a>
+        <a href="dashboard.html"><i class="fas fa-user-circle"></i><span>Perfil</span></a>
+    </nav>
+
+    <!-- Librería Lenis para Smooth Scroll -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+    <script src="js/global-script.js"></script> 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const newsContainer = document.getElementById('news-feed-container');
+            
+            // Lista de Feeds RSS (Google News y Minecraft Forum)
+            const FEEDS = [
+                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.minecraftforum.net%2Fnews.rss",
+                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dminecraft%2Bjava%2Bsnapshot%2Bupdate%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dminecraft%2Bbedrock%2Bbeta%2Bpreview%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dminecraft%2Bmods%2Btexture%2Bpacks%2Bmaps%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419"
+                        ];
+
+            // Función avanzada para extraer la imagen de la noticia
+            function getThumbnail(item) {
+                // 1. Si tiene miniatura explícita
+                if (item.thumbnail && item.thumbnail.match(/\.(jpeg|jpg|gif|png)/i)) return item.thumbnail;
+                
+                // 2. Si tiene archivo adjunto (enclosure)
+                if (item.enclosure && item.enclosure.link && item.enclosure.link.match(/\.(jpeg|jpg|gif|png)/i)) {
+                    return item.enclosure.link;
+                }
+
+                // 3. Buscar la primera etiqueta <img> dentro del contenido HTML
+                const div = document.createElement('div');
+                div.innerHTML = item.description || item.content || "";
+                const img = div.querySelector('img');
+                if (img && img.src) return img.src;
+
+                // 4. Imagen por defecto si no encuentra nada (Bloque de Hierba Genérico)
+                return 'https://www.canteach.ca/minecraft-pe/images/grass_block.gif'; 
+            }
+
+            // Función para determinar la categoría
+            function getCategory(item) {
+                const title = (item.title || "").toLowerCase();
+                const content = (item.description || "").toLowerCase();
+                const combined = title + " " + content;
+
+                if (combined.includes('java') || combined.includes('snapshot') || combined.includes('pre-release')) {
+                    return 'java';
+                }
+                if (combined.includes('bedrock') || combined.includes('beta') || combined.includes('preview') || combined.includes('pocket') || combined.includes('pe')) {
+                    return 'bedrock';
+                }
+                if (combined.includes('mod') || combined.includes('map') || combined.includes('texture') || combined.includes('skin') || combined.includes('community') || combined.includes('fan')) {
+                    return 'community';
+                }
+                // Por defecto
+                return 'community'; 
+            }
+
+            function createNewsCard(item) {
+                const card = document.createElement('a');
+                const category = getCategory(item);
+                card.className = `news-article-card news-item-category-${category}`;
+                card.dataset.category = category; // Para filtrado
+                card.href = item.link;
+                card.target = '_blank'; // Abrir en nueva pestaña
+                card.rel = 'noopener noreferrer';
+
+                // Obtener imagen procesada
+                const imageUrl = getThumbnail(item);
+
+                // Limpiar la descripción de etiquetas HTML y acortarla
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = item.description;
+                let summary = tempDiv.textContent || tempDiv.innerText || "";
+                summary = summary.split('...').pop().trim(); // Quitar el nombre de la fuente que a veces añade Google
+                summary = summary.substring(0, 150) + (summary.length > 150 ? '...' : '');
+
+                // Formatear fecha
+                const pubDate = new Date(item.pubDate);
+                const formattedDate = pubDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
+                card.innerHTML = `
+                    <img src="${imageUrl}" alt="${item.title}" class="article-thumbnail" loading="lazy" onerror="this.src='images/glauncher logo.png'">
+                    <div class="article-content">
+                        <h3 class="article-title">${item.title}</h3>
+                        <p class="article-summary">${summary}</p>
+                        <div class="article-footer">
+                            <span class="article-source"><i class="fas fa-globe"></i> ${item.author || 'Fuente Desconocida'}</span>
+                            <span class="article-date"><i class="fas fa-calendar-alt"></i> ${formattedDate}</span>
+                        </div>
+                    </div>
+                `;
+                return card;
+            }
+
+            function showSkeletons() {
+                newsContainer.innerHTML = '';
+                for(let i=0; i<6; i++) {
+                    const skeleton = document.createElement('div');
+                    skeleton.className = 'skeleton-card';
+                    skeleton.innerHTML = `
+                        <div class="skeleton-img"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton-line title"></div>
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line" style="margin-top: auto;"></div>
+                        </div>
+                    `;
+                    newsContainer.appendChild(skeleton);
+                }
+            }
+
+            async function loadNews() {
+                if (!newsContainer) return;
+                // Mostrar skeletons
+                showSkeletons();
+
+                try {
+                    // Cargar todos los feeds en paralelo
+                    const requests = FEEDS.map(url => fetch(url).then(res => res.json()));
+                    const results = await Promise.all(requests);
+
+                    let allNews = [];
+                    results.forEach(data => {
+                        if (data.status === 'ok' && data.items) {
+                            allNews = allNews.concat(data.items);
+                        }
+                    });
+
+                    // Eliminar duplicados basados en el título
+                    allNews = allNews.filter((item, index, self) =>
+                        index === self.findIndex((t) => (
+                            t.title === item.title
+                        ))
+                    );
+
+                    // Ordenar por fecha (más reciente primero)
+                    allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+                    newsContainer.innerHTML = ''; // Limpiar
+                    
+                    // Contadores
+                    let counts = { all: 0, java: 0, bedrock: 0, community: 0 };
+
+                    // Mostrar noticias
+                    allNews.slice(0, 24).forEach(item => {
+                        const card = createNewsCard(item);
+                        newsContainer.appendChild(createNewsCard(item));
+                        
+                        // Actualizar contadores
+                        counts.all++;
+                        const cat = card.dataset.category;
+                        if(counts[cat] !== undefined) counts[cat]++;
+                    });
+
+                    // Actualizar UI de contadores
+                    document.getElementById('count-all').textContent = `(${counts.all})`;
+                    document.getElementById('count-java').textContent = `(${counts.java})`;
+                    document.getElementById('count-bedrock').textContent = `(${counts.bedrock})`;
+                    document.getElementById('count-community').textContent = `(${counts.community})`;
+                    
+                    // Inicializar filtros
+                    setupFilters();
+
+                } catch (error) {
+                    console.error('Error al cargar noticias:', error);
+                    newsContainer.innerHTML = '<p style="text-align: center; color: var(--neon-pink);">No se pudieron cargar las noticias. Inténtalo más tarde.</p>';
+                }
+            }
+
+            function setupFilters() {
+                const buttons = document.querySelectorAll('.news-tab-btn');
+                const items = document.querySelectorAll('.news-article-card');
+
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Activar botón
+                        buttons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+
+                        const category = btn.dataset.category;
+
+                        // Filtrar items
+                        items.forEach(item => {
+                            if (category === 'all' || item.dataset.category === category) {
+                                item.style.display = 'flex';
+                                // Pequeña animación de entrada
+                                item.style.animation = 'fade-in-up 0.5s ease forwards';
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+                    });
+                });
+            }
+
+            loadNews();
+        });
+    </script>
+</body>
