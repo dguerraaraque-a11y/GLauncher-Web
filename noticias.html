@@ -1,6 +1,7 @@
 <html lang="es"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="description" content="Mantente informado con las últimas noticias de Minecraft, actualizaciones de GLauncher, snapshots de Java, betas de Bedrock y eventos de la comunidad.">
     <title>GLauncher - Noticias y Eventos</title>
     <link rel="stylesheet" href="css/styles.css"> 
     <link rel="icon" type="image/png" href="images/glauncher logo.png">
@@ -155,6 +156,47 @@
         }
         .skeleton-line.title { height: 25px; width: 80%; }
         .skeleton-line.short { width: 60%; }
+
+        /* --- Estilos para la Paginación (Estilo Google) --- */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+        .pagination-btn {
+            background: var(--secondary-bg-color);
+            color: var(--text-color-dark);
+            border: 1px solid var(--border-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--neon-blue);
+            color: var(--main-bg-color);
+            border-color: var(--neon-blue);
+            box-shadow: var(--shadow-blue);
+        }
+        .pagination-btn.active {
+            background: var(--neon-pink);
+            color: var(--main-bg-color);
+            border-color: var(--neon-pink);
+            box-shadow: var(--shadow-pink);
+            transform: scale(1.1);
+        }
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -192,12 +234,17 @@
             <button class="news-tab-btn active" data-category="all">Todo <span class="count" id="count-all">(0)</span></button>
             <button class="news-tab-btn" data-category="java">Java <span class="count" id="count-java">(0)</span></button>
             <button class="news-tab-btn" data-category="bedrock">Bedrock <span class="count" id="count-bedrock">(0)</span></button>
+            <button class="news-tab-btn" data-category="leaks">Filtraciones <span class="count" id="count-leaks">(0)</span></button>
             <button class="news-tab-btn" data-category="community">Comunidad <span class="count" id="count-community">(0)</span></button>
         </div>
 
         <div id="news-feed-container" class="news-feed-container">
             <!-- Las noticias se cargarán aquí dinámicamente desde el backend -->
         </div>
+        
+        <!-- Contenedor de Paginación -->
+        <div id="pagination-container" class="pagination-container"></div>
+    </main>
 
     <footer class="footer">
         <p>GLauncher © 2026. Todos los derechos reservados.</p>
@@ -220,51 +267,106 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const newsContainer = document.getElementById('news-feed-container');
+            const paginationContainer = document.getElementById('pagination-container');
             
+            // Configuración de Paginación
+            const ITEMS_PER_PAGE = 9; // 9 noticias por página (3 filas de 3)
+            let currentPage = 1;
+            let allNewsData = []; // Almacena todas las noticias crudas
+            let filteredNews = []; // Almacena las noticias filtradas para mostrar
+            
+            // Configuración de Caché
+            const CACHE_KEY = 'glauncher_news_cache_v3_mega'; // Versión actualizada para nuevas APIs
+            const CACHE_EXPIRY = 1000 * 60 * 30; // 30 minutos en milisegundos
+
             // Lista de Feeds RSS (Google News y Minecraft Forum)
+            // Usamos Google News porque es el más rápido en indexar "Pale Garden", Snapshots y Betas.
             const FEEDS = [
-                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.minecraftforum.net%2Fnews.rss",
-                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dminecraft%2Bjava%2Bsnapshot%2Bupdate%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
-                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dminecraft%2Bbedrock%2Bbeta%2Bpreview%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
-                            "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dminecraft%2Bmods%2Btexture%2Bpacks%2Bmaps%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419"
-                        ];
+                // Java Edition & Snapshots
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BJava%2BSnapshot%2BUpdate%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                // Bedrock Edition & Betas
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BBedrock%2BBeta%2BPreview%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                // Filtraciones, Rumores y Futuras Actualizaciones (NUEVO)
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BLeaks%2BRumors%2BFiltraciones%2BFeatures%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                // Actualizaciones Oficiales Generales (NUEVO)
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BOfficial%2BUpdate%2BNews%2B2026%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                // Minecraft Live & Eventos (NUEVO - Específico para eventos recientes)
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BLive%2BAnnouncements%2BNew%2BMobs%2BBiomes%26hl%3Den-US%26gl%3DUS%26ceid%3DUS%3Aen",
+                // Novedades de Jugabilidad (NUEVO - Para Slimes, Bloques, etc.)
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BNew%2BBlock%2BFeature%2BSnapshot%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                // Oficial: Artículos de Minecraft.net (Vía Google News para mejor parsing)
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dsite%3Aminecraft.net%2Ben-us%2Barticle%26hl%3Den-US%26gl%3DUS%26ceid%3DUS%3Aen",
+                // Filtraciones Técnicas: Datamining y Código
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BDatamine%2BTexture%2BLeak%2BCode%26hl%3Den-US%26gl%3DUS%26ceid%3DUS%3Aen",
+                // Bedrock Específico: Changelogs y Parches
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3DMinecraft%2BBedrock%2BChangelog%2BPatch%2BNotes%26hl%3Des-419%26gl%3DMX%26ceid%3DMX%3Aes-419",
+                // Comunidad y General (Minecraft Forum)
+                "https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.minecraftforum.net%2Fnews.rss"
+            ];
 
             // Función avanzada para extraer la imagen de la noticia
             function getThumbnail(item) {
-                // 1. Si tiene miniatura explícita
-                if (item.thumbnail && item.thumbnail.match(/\.(jpeg|jpg|gif|png)/i)) return item.thumbnail;
-                
-                // 2. Si tiene archivo adjunto (enclosure)
-                if (item.enclosure && item.enclosure.link && item.enclosure.link.match(/\.(jpeg|jpg|gif|png)/i)) {
+                // 1. Intentar obtener la miniatura explícita (thumbnail o enclosure).
+                // Se prioriza 'enclosure' si es de tipo imagen, ya que suele ser de mejor calidad.
+                if (item.enclosure && item.enclosure.type && item.enclosure.type.startsWith('image')) {
                     return item.enclosure.link;
                 }
+                if (item.thumbnail) return item.thumbnail;
 
-                // 3. Buscar la primera etiqueta <img> dentro del contenido HTML
+                // 2. Buscar dentro del contenido HTML (común en Google News y otros).
+                const content = item.description || item.content || "";
                 const div = document.createElement('div');
-                div.innerHTML = item.description || item.content || "";
-                const img = div.querySelector('img');
-                if (img && img.src) return img.src;
+                div.innerHTML = content;
+                const images = Array.from(div.querySelectorAll('img'));
 
-                // 4. Imagen por defecto si no encuentra nada (Bloque de Hierba Genérico)
-                return 'https://www.canteach.ca/minecraft-pe/images/grass_block.gif'; 
+                if (images.length > 0) {
+                    // Heurística: la mejor imagen suele ser la primera que no es un GIF y no tiene "icon", "logo" o "avatar" en su src.
+                    let bestImage = images.find(img => 
+                        img.src && !img.src.endsWith('.gif') && 
+                        !/icon|logo|avatar|feed|rss/i.test(img.src)
+                    );
+                    
+                    // Si no se encuentra una "mejor", se usa la primera de todas.
+                    if (!bestImage) bestImage = images[0];
+
+                    if (bestImage && bestImage.src) {
+                        let imageUrl = bestImage.src;
+
+                        // Algunas URLs de CDN tienen parámetros de redimensionamiento. Intentamos quitarlos para obtener la original.
+                        // Esto es una heurística y puede no funcionar siempre, pero es un intento para obtener mayor calidad.
+                        // Ej: .../image-320x240.jpg -> .../image.jpg
+                        // Ej: .../image.jpg?width=320 -> .../image.jpg
+                        imageUrl = imageUrl.replace(/-\d{2,4}x\d{2,4}(?=\.(jpg|jpeg|png|webp))/i, '');
+                        imageUrl = imageUrl.split('?')[0];
+
+                        return imageUrl;
+                    }
+                }
+
+                // 3. Fallback: Logo de GLauncher si no hay imagen.
+                return 'images/glauncher logo.png'; 
             }
 
             // Función para determinar la categoría
             function getCategory(item) {
-                const title = (item.title || "").toLowerCase();
-                const content = (item.description || "").toLowerCase();
-                const combined = title + " " + content;
+                const text = (item.title + " " + item.description).toLowerCase();
 
-                if (combined.includes('java') || combined.includes('snapshot') || combined.includes('pre-release')) {
+                // Prioridad a Filtraciones
+                if (text.includes('leak') || text.includes('filtrac') || text.includes('rumor') || text.includes('future') || text.includes('concept') || text.includes('1.2') || text.includes('live') || text.includes('mob') || text.includes('slime') || text.includes('bloque') || text.includes('biome') || text.includes('datamine') || text.includes('code')) {
+                    return 'leaks';
+                }
+
+                // Palabras clave para Java
+                if (text.includes('java') || text.includes('snapshot') || text.includes('pre-release') || text.includes('release candidate') || text.includes('rc')) {
                     return 'java';
                 }
-                if (combined.includes('bedrock') || combined.includes('beta') || combined.includes('preview') || combined.includes('pocket') || combined.includes('pe')) {
+                
+                // Palabras clave para Bedrock
+                if (text.includes('bedrock') || text.includes('beta') || text.includes('preview') || text.includes('mcpe') || text.includes('pocket') || text.includes('changelog') || text.includes('patch notes') || text.includes('hotfix')) {
                     return 'bedrock';
                 }
-                if (combined.includes('mod') || combined.includes('map') || combined.includes('texture') || combined.includes('skin') || combined.includes('community') || combined.includes('fan')) {
-                    return 'community';
-                }
-                // Por defecto
+                
+                // Por defecto, Comunidad
                 return 'community'; 
             }
 
@@ -292,12 +394,12 @@
                 const formattedDate = pubDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
 
                 card.innerHTML = `
-                    <img src="${imageUrl}" alt="${item.title}" class="article-thumbnail" loading="lazy" onerror="this.src='images/glauncher logo.png'">
+                    <img src="${imageUrl}" alt="${item.title}" class="article-thumbnail" loading="lazy" onerror="this.onerror=null;this.src='images/glauncher logo.png';">
                     <div class="article-content">
                         <h3 class="article-title">${item.title}</h3>
                         <p class="article-summary">${summary}</p>
                         <div class="article-footer">
-                            <span class="article-source"><i class="fas fa-globe"></i> ${item.author || 'Fuente Desconocida'}</span>
+                            <span class="article-source"><i class="fas fa-rss"></i> ${item.author || 'Noticias'}</span>
                             <span class="article-date"><i class="fas fa-calendar-alt"></i> ${formattedDate}</span>
                         </div>
                     </div>
@@ -323,57 +425,146 @@
                 }
             }
 
+            // Función para renderizar la paginación
+            function renderPagination() {
+                paginationContainer.innerHTML = '';
+                const totalPages = Math.ceil(filteredNews.length / ITEMS_PER_PAGE);
+                
+                if (totalPages <= 1) return; // No mostrar si solo hay una página
+
+                // Botón Anterior
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'pagination-btn';
+                prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                prevBtn.disabled = currentPage === 1;
+                prevBtn.onclick = () => changePage(currentPage - 1);
+                paginationContainer.appendChild(prevBtn);
+
+                // Números de página
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+                    btn.textContent = i;
+                    btn.onclick = () => changePage(i);
+                    paginationContainer.appendChild(btn);
+                }
+
+                // Botón Siguiente
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'pagination-btn';
+                nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                nextBtn.disabled = currentPage === totalPages;
+                nextBtn.onclick = () => changePage(currentPage + 1);
+                paginationContainer.appendChild(nextBtn);
+            }
+
+            // Función para cambiar de página
+            function changePage(page) {
+                currentPage = page;
+                renderCurrentPage();
+                
+                // Scroll suave hacia arriba de las noticias
+                const headerOffset = 150;
+                const elementPosition = newsContainer.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+            }
+
+            // Función para renderizar la página actual
+            function renderCurrentPage() {
+                newsContainer.innerHTML = '';
+                
+                const start = (currentPage - 1) * ITEMS_PER_PAGE;
+                const end = start + ITEMS_PER_PAGE;
+                const itemsToShow = filteredNews.slice(start, end);
+
+                itemsToShow.forEach(item => {
+                    newsContainer.appendChild(createNewsCard(item));
+                });
+                
+                renderPagination();
+            }
+
+            // Función centralizada para procesar los datos (ya sean de caché o API)
+            function processAndRenderNews(items) {
+                // Eliminar duplicados basados en el título
+                allNewsData = items.filter((item, index, self) =>
+                    index === self.findIndex((t) => (
+                        t.title === item.title
+                    ))
+                );
+
+                // Ordenar por fecha (más reciente primero)
+                allNewsData.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+                filteredNews = allNewsData; // Inicialmente mostramos todo
+
+                // Actualizar contadores
+                let counts = { all: 0, java: 0, bedrock: 0, leaks: 0, community: 0 };
+                allNewsData.forEach(item => {
+                    counts.all++;
+                    const cat = getCategory(item);
+                    if(counts[cat] !== undefined) counts[cat]++;
+                    else counts.community++; // Fallback
+                });
+
+                // Actualizar UI de contadores
+                document.getElementById('count-all').textContent = `(${counts.all})`;
+                document.getElementById('count-java').textContent = `(${counts.java})`;
+                document.getElementById('count-bedrock').textContent = `(${counts.bedrock})`;
+                document.getElementById('count-leaks').textContent = `(${counts.leaks})`;
+                document.getElementById('count-community').textContent = `(${counts.community})`;
+                
+                renderCurrentPage();
+                setupFilters();
+            }
+
             async function loadNews() {
                 if (!newsContainer) return;
                 // Mostrar skeletons
                 showSkeletons();
 
-                try {
-                    // Cargar todos los feeds en paralelo
-                    const requests = FEEDS.map(url => fetch(url).then(res => res.json()));
-                    const results = await Promise.all(requests);
+                // 1. Intentar cargar desde Caché (localStorage)
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    try {
+                        const parsedCache = JSON.parse(cached);
+                        const now = new Date().getTime();
+                        
+                        // Si la caché es válida (menos de 30 mins), usarla
+                        if (now - parsedCache.timestamp < CACHE_EXPIRY) {
+                            console.log("Noticias cargadas desde caché local ⚡");
+                            processAndRenderNews(parsedCache.items);
+                            return; // Salir, no hacemos fetch
+                        }
+                    } catch (e) {
+                        console.warn("Error al leer caché, recargando...");
+                    }
+                }
 
-                    let allNews = [];
+                try {
+                    console.log("Caché expirada o inexistente. Obteniendo nuevas noticias...");
+                    // Cargar todos los feeds en paralelo
+                    const responses = await Promise.all(FEEDS.map(url => fetch(url)));
+                    const results = await Promise.all(responses.map(res => res.json()));
+
+                    let fetchedItems = [];
+                    
+                    // Combinar todas las noticias
                     results.forEach(data => {
                         if (data.status === 'ok' && data.items) {
-                            allNews = allNews.concat(data.items);
+                            fetchedItems = fetchedItems.concat(data.items);
                         }
                     });
 
-                    // Eliminar duplicados basados en el título
-                    allNews = allNews.filter((item, index, self) =>
-                        index === self.findIndex((t) => (
-                            t.title === item.title
-                        ))
-                    );
-
-                    // Ordenar por fecha (más reciente primero)
-                    allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-
-                    newsContainer.innerHTML = ''; // Limpiar
+                    // Guardar en Caché antes de procesar
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({
+                        timestamp: new Date().getTime(),
+                        items: fetchedItems
+                    }));
                     
-                    // Contadores
-                    let counts = { all: 0, java: 0, bedrock: 0, community: 0 };
-
-                    // Mostrar noticias
-                    allNews.slice(0, 24).forEach(item => {
-                        const card = createNewsCard(item);
-                        newsContainer.appendChild(createNewsCard(item));
-                        
-                        // Actualizar contadores
-                        counts.all++;
-                        const cat = card.dataset.category;
-                        if(counts[cat] !== undefined) counts[cat]++;
-                    });
-
-                    // Actualizar UI de contadores
-                    document.getElementById('count-all').textContent = `(${counts.all})`;
-                    document.getElementById('count-java').textContent = `(${counts.java})`;
-                    document.getElementById('count-bedrock').textContent = `(${counts.bedrock})`;
-                    document.getElementById('count-community').textContent = `(${counts.community})`;
-                    
-                    // Inicializar filtros
-                    setupFilters();
+                    // Procesar y mostrar
+                    processAndRenderNews(fetchedItems);
 
                 } catch (error) {
                     console.error('Error al cargar noticias:', error);
@@ -383,7 +574,6 @@
 
             function setupFilters() {
                 const buttons = document.querySelectorAll('.news-tab-btn');
-                const items = document.querySelectorAll('.news-article-card');
 
                 buttons.forEach(btn => {
                     btn.addEventListener('click', () => {
@@ -393,16 +583,16 @@
 
                         const category = btn.dataset.category;
 
-                        // Filtrar items
-                        items.forEach(item => {
-                            if (category === 'all' || item.dataset.category === category) {
-                                item.style.display = 'flex';
-                                // Pequeña animación de entrada
-                                item.style.animation = 'fade-in-up 0.5s ease forwards';
-                            } else {
-                                item.style.display = 'none';
-                            }
-                        });
+                        // Filtrar datos
+                        if (category === 'all') {
+                            filteredNews = allNewsData;
+                        } else {
+                            filteredNews = allNewsData.filter(item => getCategory(item) === category);
+                        }
+                        
+                        // Reiniciar a página 1 y renderizar
+                        currentPage = 1;
+                        renderCurrentPage();
                     });
                 });
             }

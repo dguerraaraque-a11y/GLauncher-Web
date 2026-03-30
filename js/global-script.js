@@ -57,16 +57,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Sistema Global de Notificaciones Flotantes ---
     window.showNotification = (message, type = 'info') => {
         const container = document.getElementById('notification-container');
-        if (!container) return;
+        if (!container) {
+            console.error("Contenedor de notificaciones no encontrado");
+            return;
+        }
 
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         
-        let iconClass = 'fa-info-circle';
-        if (type === 'success') iconClass = 'fa-check-circle';
-        if (type === 'error') iconClass = 'fa-times-circle';
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-times-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle'
+        };
 
-        notification.innerHTML = `<i class="fas ${iconClass}"></i> ${message}`;
+        notification.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> <span>${message}</span>`;
         
         container.appendChild(notification);
 

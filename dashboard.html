@@ -121,10 +121,43 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN DE SKINS (NUEVA) -->
+                <!-- SECCIÓN DE SKINS (REMODELADA 3D) -->
                 <section id="skins-section" class="content-section">
                     <h2 class="section-header"><i class="fas fa-paint-brush"></i> Gestor de Skins</h2>
-                    <div id="skins-inventory-grid" class="skins-grid"></div>
+                    <div class="minecraft-skins-container">
+                        <!-- Panel de Vista Previa 3D/2D -->
+                        <div class="skin-viewer-panel">
+                            <div class="skin-display-card">
+                                <div class="render-container" id="skin-viewer-3d">
+                                    <!-- SkinView3D insertará el canvas aquí -->
+                                </div>
+                                <div class="skin-info-overlay">
+                                    <h3 id="active-skin-name">Skin Cargada</h3>
+                                    <span id="skin-type-badge" class="badge-status">Modelo: 64x64</span>
+                                </div>
+                            </div>
+                            
+                            <div class="skin-upload-actions">
+                                <label for="skin-file-input" class="action-btn save-btn upload-skin-btn">
+                                    <i class="fas fa-upload"></i> Subir Mi Propia Skin (.png)
+                                </label>
+                                <input type="file" id="skin-file-input" accept="image/png" style="display: none;">
+                                <div class="viewer-controls">
+                                    <button id="btn-animate" class="control-btn" title="Animar"><i class="fas fa-walking"></i></button>
+                                    <button id="btn-rotate" class="control-btn active" title="Auto-rotar"><i class="fas fa-sync"></i></button>
+                                </div>
+                                <p class="help-text">Arrastra para rotar • Scroll para zoom</p>
+                            </div>
+                        </div>
+
+                        <!-- Galería de Skins y Capas -->
+                        <div class="skin-library-panel">
+                            <h3 class="panel-subtitle"><i class="fas fa-tshirt"></i> Tu Biblioteca de Skins</h3>
+                            <div id="skins-inventory-grid" class="skins-grid">
+                                <!-- Aquí se cargarán las skins compradas o las de la comunidad -->
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- SECCIÓN DE ESTADÍSTICAS (EXISTENTE) -->
@@ -186,8 +219,8 @@
                             
                             <!-- Panel Perfil -->
                             <div id="profile-panel" class="settings-panel active">
-                                <div class="settings-card">
-                                    <h3>Información Básica</h3>
+                                <form id="account-settings-form" class="settings-card">
+                                    <h3><i class="fas fa-id-card"></i> Información Básica</h3>
                                     <div class="form-group avatar-upload-group">
                                         <div class="avatar-preview-container" style="display: flex; align-items: center; gap: 20px;">
                                             <img id="settings-avatar-preview" src="images/avatars/default-avatar.png" alt="Avatar Preview" class="nav-avatar" style="width: 80px; height: 80px;">
@@ -204,14 +237,14 @@
                                         <label for="username-change">Nombre de Usuario</label>
                                         <input type="text" id="username-change" class="neon-input-field" placeholder="Tu nombre visible">
                                     </div>
-                                    <button class="action-btn save-btn" id="save-profile-btn">Guardar Perfil</button>
-                                </div>
+                                    <button class="action-btn save-btn" id="save-profile-btn"><i class="fas fa-save"></i> Guardar Perfil</button>
+                                </form>
                             </div>
 
                             <!-- Panel Seguridad -->
                             <div id="security-panel" class="settings-panel">
                                 <div class="settings-card">
-                                    <h3>Cambiar Contraseña</h3>
+                                    <h3><i class="fas fa-lock"></i> Seguridad de la Cuenta</h3>
                                     <div class="form-group">
                                         <label>Contraseña Actual</label>
                                         <input type="password" class="neon-input-field">
@@ -220,14 +253,14 @@
                                         <label>Nueva Contraseña</label>
                                         <input type="password" class="neon-input-field">
                                     </div>
-                                    <button class="action-btn save-btn">Actualizar Contraseña</button>
+                                    <button class="action-btn save-btn"><i class="fas fa-key"></i> Actualizar Contraseña</button>
                                 </div>
                             </div>
 
                             <!-- Panel Privacidad -->
                             <div id="privacy-panel" class="settings-panel">
                                 <div class="settings-card">
-                                    <h3>Preferencias de Privacidad</h3>
+                                    <h3><i class="fas fa-user-shield"></i> Privacidad y Visibilidad</h3>
                                     <div class="setting-toggle">
                                         <label>Mostrar estado en línea</label>
                                         <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
@@ -242,9 +275,9 @@
                             <!-- Panel Peligro -->
                             <div id="danger-panel" class="settings-panel">
                                 <div class="settings-card" style="border-color: var(--neon-pink);">
-                                    <h3 style="color: var(--neon-pink);">Eliminar Cuenta</h3>
+                                    <h3 style="color: var(--neon-pink);"><i class="fas fa-skull-crossbones"></i> Zona de Peligro</h3>
                                     <p style="margin-bottom: 15px;">Esta acción es irreversible. Perderás todos tus GCoins y cosméticos.</p>
-                                    <button class="action-btn" style="background: var(--neon-pink); color: white;">Eliminar Definitivamente</button>
+                                    <button class="action-btn" style="background: var(--neon-pink); color: white;"><i class="fas fa-user-slash"></i> Eliminar Definitivamente</button>
                                 </div>
                             </div>
                         </div>
@@ -264,7 +297,8 @@
 
     <!-- Librería Lenis para Smooth Scroll -->
     <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
-
+    <!-- Librería SkinView3D para Renders Interactivos -->
+    <script src="https://unpkg.com/skinview3d@latest/bundles/skinview3d.bundle.js"></script>
     <script src="js/global-script.js" defer></script>
     <script src="js/dashboard-script.js" defer></script>
 </body>

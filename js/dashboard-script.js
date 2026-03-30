@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_AVATAR_URL = 'https://crafatar.com/avatars/606e2ff0-ed77-4842-9d6c-e1d3321c7838?size=100&overlay'; // Steve Avatar
     const PUSHER_KEY = 'a2fb8d4323a44da53c63'; // Tu clave de Pusher
     const token = localStorage.getItem('glauncher_token');
+    let skinViewer; // Instancia global para el visor 3D
 
     // --- FLOATING NAV LOGIC ---
     const navItems = document.querySelectorAll('.floating-nav-item');
@@ -64,7 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
             initializeAchievements(userData);
             initializeStatusSystem(userData);
             initializeGChat(userData, friendsData);
-            renderSkinsInventory(userData.owned_cosmetics, allCosmetics);
+            initializeSkinUploader(userData);
+            renderSkinsInventory(userData.owned_cosmetics, allCosmetics, userData.equipped_cosmetic_id);
 
         } catch (error) {
             console.error("Error al cargar datos de usuario:", error);
@@ -387,25 +389,151 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function renderSkinsInventory(ownedIds, allCosmetics) {
+    // --- GESTOR DE SKINS DE MINECRAFT ---
+    // --- GESTOR DE SKINS DE MINECRAFT (3D) ---
+    function initializeSkinUploader(userData) {
+        const container = document.getElementById('skin-viewer-3d');
+        const fileInput = document.getElementById('skin-file-input');
+        
+        // Inicializar el visor 3D
+        skinViewer = new skinview3d.SkinViewer({
+            canvas: document.createElement("canvas"),
+            width: 300,
+            height: 400,
+            skin: userData.skin_url || "https://crafatar.com/skins/606e2ff0-ed77-4842-9d6c-e1d3321c7838" // Default Steve
+        });
+        container.appendChild(skinViewer.canvas);
+
+        // Configuración inicial
+        skinViewer.autoRotate = true;
+        skinViewer.animation = new skinview3d.WalkingAnimation();
+        skinViewer.animation.paused = true;
+
+        // Controles de UI
+        document.getElementById('btn-animate').onclick = (e) => {
+            e.target.closest('button').classList.toggle('active');
+            const btn = e.target.closest('button');
+            btn.classList.toggle('active');
+            skinViewer.animation.paused = !skinViewer.animation.paused;
+        };
+        
+        document.getElementById('btn-rotate').onclick = (e) => {
+            e.target.closest('button').classList.toggle('active');
+            const btn = e.target.closest('button');
+            btn.classList.toggle('active');
+            skinViewer.autoRotate = !skinViewer.autoRotate;
+        };
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Previsualización local inmediata
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                // Nota: Aquí podrías usar una librería como SkinView3D para un render 3D real
+                window.showNotification('Subiendo skin al servidor...', 'info');
+                skinViewer.loadSkin(event.target.result);
+                window.showNotification('Previsualizando nueva skin...', 'info');
+            };
+            reader.readAsDataURL(file);
+
+            // Subida al Backend
+            const formData = new FormData();
+            formData.append('skin_file', file);
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/user/upload_skin`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+
+                window.showNotification('¡Skin de Minecraft actualizada!', 'success');
+                window.showNotification('¡Skin de Minecraft actualizada en el servidor!', 'success');
+            } catch (error) {
+                window.showNotification(error.message, 'error');
+            }
+            
+            // Aquí iría la lógica de subida al backend
+        });
+    }
+
+    function renderSkinsInventory(ownedIds, allCosmetics, equippedId) {
         const skinsGrid = document.getElementById('skins-inventory-grid');
+        const previewImg = document.getElementById('skin-preview-img');
+        const previewName = document.getElementById('skin-preview-name');
+        const previewDesc = document.getElementById('skin-preview-desc');
+        const equipBtn = document.getElementById('equip-skin-btn');
+
         skinsGrid.innerHTML = '';
         const ownedCosmetics = allCosmetics.filter(item => ownedIds.includes(item.id));
 
         if (ownedCosmetics.length === 0) {
-            skinsGrid.innerHTML = '<p class="placeholder-content">Aún no tienes cosméticos. ¡Visita la tienda para conseguir algunos!</p>';
+            skinsGrid.innerHTML = '<p class="placeholder-content">Aún no tienes cosméticos. ¡Visita la tienda!</p>';
             return;
         }
 
         ownedCosmetics.forEach(item => {
+            const isEquipped = item.id === equippedId;
             const skinCard = document.createElement('div');
-            skinCard.className = 'skin-card';
+            skinCard.className = `skin-card ${isEquipped ? 'equipped' : ''}`;
+            
             skinCard.innerHTML = `
                 <img src="${BACKEND_URL}${item.image_url}" alt="${item.name}" class="skin-image">
                 <p class="skin-name">${item.name}</p>
             `;
+
+            skinCard.addEventListener('click', () => {
+                // En el gestor de skins REAL, aquí cargarías el PNG de la skin
+                skinViewer.loadSkin(`${BACKEND_URL}${item.image_url}`);
+                document.getElementById('active-skin-name').textContent = item.name;
+                // Actualizar Vista Previa
+                previewImg.src = `${BACKEND_URL}${item.image_url}`;
+                previewName.textContent = item.name;
+                previewDesc.textContent = item.description;
+                
+                if (item.id === equippedId) {
+                    equipBtn.style.display = 'none';
+                } else {
+                    equipBtn.style.display = 'block';
+                    equipBtn.onclick = () => equipCosmetic(item.id);
+                }
+                
+                // Resaltar selección visual
+                document.querySelectorAll('.skin-card').forEach(c => c.style.borderColor = '');
+                skinCard.style.borderColor = 'var(--neon-blue)';
+            });
+
             skinsGrid.appendChild(skinCard);
+
+            // Preseleccionar el equipado al cargar
+            if (isEquipped) {
+                previewImg.src = `${BACKEND_URL}${item.image_url}`;
+                previewName.textContent = item.name;
+                previewDesc.textContent = item.description;
+            }
         });
+    }
+
+    async function equipCosmetic(cosmeticId) {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/user/equip`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ cosmetic_id: cosmeticId })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+            
+            window.showNotification('¡Cosmético equipado con éxito!', 'success');
+            loadUserData(); // Recargar datos para actualizar la UI
+        } catch (error) {
+            window.showNotification(error.message, 'error');
+        }
     }
 
     // --- LÓGICA DE LOGROS ---
@@ -530,6 +658,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Poblar datos iniciales
         document.getElementById('username-change').value = userData.username;
         avatarPreview.src = userData.avatar_url || DEFAULT_AVATAR_URL;
+
+        // Lógica de cambio de paneles internos en Ajustes
+        // Lógica de navegación de pestañas en Ajustes
+        const settingsNavBtns = document.querySelectorAll('.settings-nav-btn');
+        const settingsPanels = document.querySelectorAll('.settings-panel');
+
+        settingsNavBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetPanel = btn.dataset.panel;
+                
+                settingsNavBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                settingsPanels.forEach(panel => {
+                    panel.classList.remove('active');
+                    if (panel.id === targetPanel) panel.classList.add('active');
+                });
+            });
+        });
 
         // Previsualización de avatar
         avatarFileInput.addEventListener('change', () => {

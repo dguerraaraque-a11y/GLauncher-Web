@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLauncher - 404 No Encontrado</title>
+    <link rel="icon" type="image/png" href="images/glauncher logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--main-bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.05) 0%, transparent 60%),
+                linear-gradient(rgba(13, 17, 23, 0.95), rgba(13, 17, 23, 0.95));
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px;
+            background: rgba(22, 27, 34, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+            animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .error-code {
+            font-size: 12em;
+            font-weight: 900;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--neon-pink);
+            text-shadow: 0 0 20px var(--neon-pink);
+            margin: -20px 0 0 0;
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .error-code::before {
+            content: '404';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            color: var(--neon-pink);
+            opacity: 0.1;
+            filter: blur(10px);
+            animation: neon-flicker 3s infinite alternate;
+        }
+        
+        .error-message {
+            font-size: 2.5em;
+            color: var(--neon-blue);
+            margin-top: -10px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .error-description {
+            font-size: 1.3em;
+            color: var(--text-color-dark);
+            max-width: 600px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .home-btn {
+            background-color: var(--neon-green);
+            color: var(--main-bg-color);
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.4);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            border: 2px solid transparent;
+        }
+        
+        .home-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 40px rgba(57, 255, 20, 0.6);
+            background-color: transparent;
+            color: var(--neon-green);
+            border-color: var(--neon-green);
+        }
+
+        .broken-link-icon {
+            font-size: 6em;
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px var(--neon-blue));
+        }
+
+        .footer {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes pop-in {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <div class="error-container">
+            <i class="fas fa-cube broken-link-icon"></i>
+            <h1 class="error-code">404</h1>
+            <h2 class="error-message">Chunk No Cargado</h2>
+            <p class="error-description">
+                Has llegado a los límites del mapa. La página que buscas no existe o ha sido eliminada por un Enderman.
+            </p>
+            <a href="index.html" class="home-btn">
+                <i class="fas fa-home"></i> Volver al Spawn
+            </a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>GLauncher &copy; 2026. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="js/global-script.js"></script>
+    <script>
+        // Efecto de partículas flotantes
+        document.addEventListener('DOMContentLoaded', () => {
+            const body = document.body;
+            for(let i=0; i<30; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.width = Math.random() * 4 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = Math.random() > 0.5 ? 'var(--neon-blue)' : 'var(--neon-pink)';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.top = Math.random() * 100 + 'vh';
+                particle.style.borderRadius = '50%';
+                particle.style.opacity = Math.random() * 0.5;
+                particle.style.pointerEvents = 'none';
+                particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+                body.appendChild(particle);
+            }
+        });
+    </script>
+</body>
+</html>
