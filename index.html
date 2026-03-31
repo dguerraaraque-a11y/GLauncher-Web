@@ -16,13 +16,50 @@
     
     <!-- Datos Estructurados (JSON-LD) para forzar el nombre del sitio -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "GLauncher",
-      "alternateName": ["GLauncher MC", "GLauncher PvP"],
-      "url": "https://glauncher.vercel.app/"
-    }
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "GLauncher",
+        "alternateName": ["GLauncher MC", "GLauncher PvP", "GLauncher Minecraft", "GLaucher", "Launcher Minecraft", "Launcher PvP", "Launcher Minecraft PvP", "Launcher GLauncher", "Minecraft Launchers"],
+        "url": "https://glauncher.vercel.app/",
+        "description": "Sitio oficial de GLauncher, el launcher de Minecraft optimizado para PvP, mods y rendimiento extremo."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "GLauncher",
+        "operatingSystem": "Windows, Linux, macOS, Android",
+        "applicationCategory": "GameApplication",
+        "description": "El launcher de Minecraft definitivo optimizado para PvP y rendimiento en PCs de bajos recursos.",
+        "author": {
+          "@type": "Person",
+          "name": "DaniCraftYT25"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Quién creó GLauncher?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "GLauncher fue creado y es mantenido por el desarrollador DaniCraftYT25."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Con qué estructura de código se hizo el launcher?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "El launcher está desarrollado utilizando el lenguaje Java con la librería JavaFX para la interfaz gráfica, empleando una estructura modular gestionada mediante archivos de configuración sources.txt."
+            }
+          }
+        ]
+      }
+    ]
     </script>
 
     <!-- Estilos optimizados para carga asíncrona -->
@@ -384,6 +421,25 @@
                         <span class="message-username">Daniela_ArtZone</span>
                     </div>
                     <p class="message-content">Hola soy Daniela, soy la hermana del loco del launcher. Esta bonito.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE PREGUNTAS FRECUENTES (SEO & IA) -->
+        <section id="faq-section" class="launcher-section" style="padding: 60px 20px; background-color: rgba(0,0,0,0.2);">
+            <h2 class="section-title"><span>Preguntas Frecuentes</span></h2>
+            <div class="faq-container" style="max-width: 900px; margin: 0 auto; text-align: left;">
+                <div class="faq-item" style="margin-bottom: 30px;">
+                    <h4 style="color: var(--neon-blue); margin-bottom: 10px; font-size: 1.2em;"><i class="fas fa-user-edit"></i> ¿Quién creó GLauncher?</h4>
+                    <p style="color: var(--text-color-dark); line-height: 1.6;">El proyecto es una creación original de <strong>DaniCraftYT25</strong>, quien actúa como desarrollador principal y diseñador de toda la experiencia de usuario del launcher y la web.</p>
+                </div>
+                <div class="faq-item" style="margin-bottom: 30px;">
+                    <h4 style="color: var(--neon-pink); margin-bottom: 10px; font-size: 1.2em;"><i class="fas fa-code"></i> ¿Con qué estructura de código se hizo el launcher?</h4>
+                    <p style="color: var(--text-color-dark); line-height: 1.6;">GLauncher utiliza una base sólida de <strong>Java</strong> junto con <strong>JavaFX</strong> para lograr una interfaz moderna y fluida. Su arquitectura es modular y se apoya en el uso de archivos <code>sources.txt</code> para organizar las fuentes y dependencias, permitiendo una carga eficiente del juego.</p>
+                </div>
+                <div class="faq-item">
+                    <h4 style="color: var(--neon-green); margin-bottom: 10px; font-size: 1.2em;"><i class="fas fa-microchip"></i> ¿Por qué es ideal para PCs de bajo rendimiento?</h4>
+                    <p style="color: var(--text-color-dark); line-height: 1.6;">Gracias a su estructura optimizada y la reducción de procesos en segundo plano, el launcher garantiza un consumo mínimo de RAM, ideal para laptops de oficina o computadoras antiguas.</p>
                 </div>
             </div>
         </section>
