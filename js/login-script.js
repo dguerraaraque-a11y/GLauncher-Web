@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const BACKEND_URL = 'https://glauncher-api.onrender.com';
+    // Usamos el cliente global de Supabase (debe estar cargado previamente)
+    const supabaseClient = window.glauncherSupabase;
 
     const loginForm = document.getElementById('login-form');
     const credentialsSection = document.getElementById('credentials-section');
@@ -81,6 +83,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     // ¡Login exitoso! Guardamos el token y redirigimos
                     localStorage.setItem('glauncher_token', data.token);
+                    
+                    // --- NUEVO: Obtener datos de la tabla 'profiles' que creaste ---
+                    if (supabaseClient) {
+                        const { data: profile, error: profileError } = await supabaseClient
+                            .from('profiles')
+                            .select('username, gcoins, friends_count, play_time_seconds, status')
+                            .eq('username', username) // O usar data.id si el backend lo devuelve
+                            .single();
+
+                        if (profile) {
+                            localStorage.setItem('glauncher_user_profile', JSON.stringify(profile));
+                            console.log('Perfil de Supabase cargado:', profile);
+                        } else if (profileError) {
+                            console.error('Error al cargar perfil de Supabase:', profileError);
+                        }
+                    }
+
                     window.showNotification('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
                     
                     // Esperar un momento para que el usuario vea la notificación
